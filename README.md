@@ -18,9 +18,11 @@ Queremos formalizar el álgebra de Kleene concurrente usando el asistente de pru
 
 * En este [artículo](https://opus.bibliothek.uni-augsburg.de/opus4/frontdoor/deliver/index/docId/68908/file/CKACONCUR.pdf) se define el álgebra.
 
-* La teoría  `List`  ya tiene definida la operación de mezcla (es esta, [shuffles](https://isabelle.in.tum.de/library/HOL/HOL/List.html#List.shuffles|const))
+* La teoría  `List`  ya tiene definida la operación de mezcla (es esta, [shuffles](https://isabelle.in.tum.de/library/HOL/HOL/List.html#List.shuffles|const)).
 
-* Ya hay quantales y álgebras de Kleene en el proof archive, y unas álgebras de kleene concurrentes
+* [Acá](https://planetmath.org/shuffleoflanguages) está eso mismo, pero en 'no Isabelle', y definido para lenguajes y no solo pares de cadenas.
 
-* Ya hay semianillos y reticulados completos en la librería estándar
+* Ya hay quantales y álgebras de Kleene en el proof archive, y unas álgebras de kleene concurrentes.
+
+* Ya hay semianillos y reticulados completos en la librería estándar.
 
