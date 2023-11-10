@@ -1,5 +1,5 @@
 theory CKA
-  imports Main "HOL-Lattice.CompleteLattice" ShuffleLanguages
+  imports Main
 begin
 
 (*
@@ -38,67 +38,88 @@ begin
 
 *)
 
-locale concat =
-  fixes concat :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl ";" 75)
-
-locale times =
-  fixes times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "*" 70)
-
-locale plus =
-  fixes plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "+" 65)
-
-locale one =
-  fixes one :: "'a"
-
-locale zero =
-  fixes zero :: "'a"
-
 (* ac_simps makes a statement available for simplifiers that
 use commutativity and associativity *)
 
-class times_monoid  =
-  times +
-  one +
+locale monoid =
+  fixes
+    compose :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "." 70) and
+    unit :: 'a ("1")
   assumes
-  one_is_right_neuter [ac_simps] : "a * one = a" and
-  one_is_left_neuter [ac_simps] : "one * a = a"
+    one_is_right_neuter [simp] :
+      " x.1 = x " and
+    one_is_left_neuter [simp] :
+      " 1.x = x "
 
-class plus_monoid =
-  plus +
-  zero +
+locale commutative_monoid =
+    monoid "compose" "unit" for
+      compose :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "." 70) and
+      unit :: 'a ("1") +
   assumes
-  zero_is_right_neuter [ac_simps] : "a + zero = a" and
-  zero_is_left_neuter [ac_simps] : "zero + a = a"
+    composition_is_commutative [simp] :
+      "compose x y = compose y x"
 
-class commutative_plus_monoid =
-  plus_monoid +
+locale semiring =
+  plus_commutative_monoid : commutative_monoid plus zero +
+  times_monoid : monoid times one for
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "+" 70) and
+    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "*" 80) and
+    zero :: 'a ("0") and
+    one :: 'a ("1") +
   assumes
-  plus_commutative [ac_simps] : "a + b = b + a"
+    times_distributes_over_plus :
+      "times a (plus c b) = plus (times a c) (times a b) " and
+    zero_is_left_anihilator [simp] :
+      " times zero a = zero " and
+    zero_is_right_anihilator [simp] :
+      " times a zero = zero "
 
-class semiring =
-  commutative_plus_monoid +
-  times_monoid +
+locale idempotent_semiring =
+  semiring plus times zero one for
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "+" 70) and
+    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "*" 80) and
+    zero :: 'a ("0") and
+    one :: 'a ("1") +
   assumes
-    times_distributes_over_plus : "a * (c + b) = a * c + a * b" and
-    zero_is_left_anihilator : "zero * a = zero" and
-    zero_is_right_anihilator : "a * zero = zero"
+    plus_is_idempotent [simp] :
+      " plus a a = a "
 
-class idempotent_semiring =
-  semiring +
+locale natural_order_semiring =
+  fixes
+    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<le>" 50) and
+    semiring plus times zero one
   assumes
-    plus_is_idempotent [simp] : "a + a = a"
+    induced_natural_order :
+      " plus a b = b \<longleftrightarrow> leq a b "
 
-class natural_order_semiring =
-  idempotent_semiring +
-  fixes leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool"
+(*
+locale complete_lattice =
+  fixes
+    infimum :: "'a set \<Rightarrow> 'a" (infixl "" 60) and
   assumes
-    leq_definition : "leq a b \<longleftrightarrow> a + b = b"
+    infimum_exists :
+      ""
 
+-- top will be sigma star
+-- bottom will be the empty set
+-- leq is the induced natural order
+
+*)
+
+(*
 class quantale =
   natural_order_semiring +
   complete_lattice
 
+instance 
+
+*)
+
 (*
+
+  Exchange law
+
+
   "(((a * b);(c * d)) \<le> ((b;c) * (a;d)))"
 *)
 
