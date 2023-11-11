@@ -63,38 +63,6 @@ locale natural_order_semiring =
     induced_natural_order :
       " plus a b = b \<longleftrightarrow> leq a b "
 
-(*
-locale complete_lattice =
-  fixes
-    infimum :: "'a set \<Rightarrow> 'a" (infixl "" 60) and
-  assumes
-    infimum_exists :
-      ""
-
--- top will be sigma star
--- bottom will be the empty set
--- leq is the induced natural order
-
-*)
-
-(* Quantales *)
-
-(*
-class quantale =
-  natural_order_semiring +
-  complete_lattice +
-  assumes
-    exchange_law :
-      <exchange_law>
-*)
-
-(*
-
-  Exchange law
-
-  "(((a * b);(c * d)) \<le> ((b;c) * (a;d)))"
-*)
-
 text "Now we interpret the
       locales we defined
       earlier."
@@ -157,6 +125,39 @@ proof
     unfolding language_concat_def
     by auto
 qed
+
+(*
+locale complete_lattice =
+  fixes
+    infimum :: "'a set \<Rightarrow> 'a" (infixl "" 60) and
+    less_or_equal :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" (infixl "" 0)
+  assumes
+    infimum_of_set :
+      " ALL a :: 'a set . ALL A :: "'a set set" . "a : A ==> less_or_equal (infimum A) a "
+
+-- top will be sigma star
+-- bottom will be the empty set
+-- leq is the induced natural order
+
+*)
+
+(* Quantales *)
+
+(*
+class quantale =
+  natural_order_semiring +
+  complete_lattice +
+  assumes
+    exchange_law :
+      <exchange_law>
+*)
+
+(*
+
+  Exchange law
+
+  "(((a * b);(c * d)) \<le> ((b;c) * (a;d)))"
+*)
 
 end
      
