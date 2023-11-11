@@ -119,5 +119,44 @@ proof
     by simp
 qed
 
+interpretation union_concat_semiring : semiring union language_concat empty "{[]}"
+proof
+  show
+    " \<And>a c b. a ; (c \<union> b) = a ; c \<union> a ; b "
+    unfolding language_concat_def
+    by fast+
+  show
+    " \<And>a. {} ; a = {} "
+    unfolding language_concat_def
+    by fast+
+  show
+    " \<And>a. a ; {} = {} "
+    unfolding language_concat_def
+    by fast+
+qed
+
+interpretation union_shuffle_semiring : semiring union language_shuffle empty "{[]}"
+proof
+  show
+    " \<And>a c b. a  \<diamondop> (c \<union> b) = (a \<diamondop> c) \<union> (a \<diamondop> b) "
+    unfolding language_concat_def
+    by simp_all
+  show
+    " \<And>x. x \<diamondop> {[]} = x "
+    unfolding language_concat_def
+    by auto
+  show
+    " \<And>x. {[]} \<diamondop> x = x "
+    unfolding language_concat_def
+    by auto
+  show
+    " \<And>a. {} \<diamondop> a = {} "
+    unfolding language_concat_def
+    by auto
+  show " \<And>a. a \<diamondop> {} = {} "
+    unfolding language_concat_def
+    by auto
+qed
+
 end
      
