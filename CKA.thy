@@ -145,30 +145,12 @@ proof
     by (simp add: Un_commute)
 qed
 
-lemma shuffle_nil_left : " shuffles [] xs = {xs} "
-  by simp
-
-lemma shuffle_nil_right : " shuffles xs [] = {xs} "
-  by simp
-
-lemma concat_nil_left : " [] @ xs = xs "
-  by simp
-
-lemma concat_nil_right : " xs @ [] = xs "
-  by simp
-
-lemma pconcat_one_right : " A ; {[]} = A "
-  sorry
-
-lemma pconcat_one_left : " {[]} ; A = A "
-  sorry
-
 interpretation "'a language" : monoid language_concat "{[]}"
 proof
   show " \<And>x. {[]} ; x = x "
-    sorry
+    by simp
   show " \<And>x. language_concat x {[]} = x "
-    sorry 
+    by simp
 qed
 
 end
