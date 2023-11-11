@@ -62,30 +62,4 @@ lemma shuffle_exchange_law : "(A \<diamondop> B) ; (C \<diamondop> D) \<subseteq
   sorry
 *)
 
-fun head_concat :: "'a list \<Rightarrow> 'a list list \<Rightarrow> 'a list list" where
-  "head_concat a Nil = Nil" |
-  "head_concat a (b#bs) = (a@b)#(head_concat a bs)"
-
-fun product_concat :: "'a list list \<Rightarrow> 'a list list \<Rightarrow> 'a list list" where
-  "product_concat Nil s = Nil" |
-  "product_concat (x#xs) s = (head_concat x s) @ product_concat xs s"
-
-fun list_shuffles :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list list" where
-  "list_shuffles [] s = [s]" |
-  "list_shuffles s [] = [s]" |
-  "list_shuffles (a#s) (b#t) = head_concat [a] (list_shuffles s (b#t)) @ head_concat [b] (list_shuffles (a#s) t)"
-
-fun is_list_member :: "'a \<Rightarrow> 'a list \<Rightarrow> bool" where
-  "is_list_member x [] = False" |
-  "is_list_member x (y#xs) = ( if x=y then True else (is_list_member x xs) )"
-
-(*
-lemma is_list_member x xs \<longrightarrow> member x (set xs)
-
-lemma all xs ys n. is_list_member (shuffle_on_index xs ys n) (shuffles xs ys)
-
-lemma is_list_member \<longrightarrow> member x (set xs)
-
-*)
-
 end
