@@ -137,21 +137,39 @@ text "Now we define shuffle languages
 
 interpretation "'a set" : commutative_monoid union "empty"
 proof
-  show "\<And>x. x \<union> {} = x"
+  show " \<And>x. x \<union> {} = x "
     by simp
-  show "\<And>x. {} \<union> x = x"
+  show " \<And>x. {} \<union> x = x "
     by simp
-  show "\<And>x y. x \<union> y = y \<union> x"
+  show " \<And>x y. x \<union> y = y \<union> x "
     by (simp add: Un_commute)
 qed
 
+lemma shuffle_nil_left : " shuffles [] xs = {xs} "
+  by simp
+
+lemma shuffle_nil_right : " shuffles xs [] = {xs} "
+  by simp
+
+lemma concat_nil_left : " [] @ xs = xs "
+  by simp
+
+lemma concat_nil_right : " xs @ [] = xs "
+  by simp
+
+lemma pconcat_one_right : " A ; {[]} = A "
+  sorry
+
+lemma pconcat_one_left : " {[]} ; A = A "
+  sorry
+
 interpretation "'a language" : monoid language_concat "{[]}"
 proof
-  show " \<And>x. language_concat x {[]} = x "
-    by simp
   show " \<And>x. {[]} ; x = x "
-    by simp
+    sorry
+  show " \<And>x. language_concat x {[]} = x "
+    sorry 
 qed
 
-
+end
      
