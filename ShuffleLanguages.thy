@@ -2,14 +2,6 @@ theory ShuffleLanguages
   imports Main
 begin
 
-(*
-So far:
-- Singletons can be written as is (like {a})
-- Apparently big operators have the same name as small operators, but capitalized
-  (at least for union and Union)
-- "Big" Union is defined in the theory Complete Lattices
-*)
-
 type_synonym 'a language = "('a list) set"
 
 definition language_concat :: "'a language \<Rightarrow> 'a language \<Rightarrow> 'a language" (infixr ";" 75) where
