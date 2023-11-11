@@ -1,5 +1,5 @@
 theory ShuffleLanguages
-  imports Main HOL.HOL.List
+  imports Main
 begin
 
 (*
@@ -31,8 +31,10 @@ lemma difference_union : "A \<union> B = (A - B) \<union> (B - A) \<union> (A \<
 lemma inclusion_forall : "(\<And> x. x : A \<Longrightarrow>  x : B) \<Longrightarrow> A \<subseteq> B"
   by auto
 
+(*
 lemma shuffle_exchange_law : "(A \<diamondop> B) ; (C \<diamondop> D) \<subseteq> (A ; C) \<diamondop> (B ; D)"
   sorry
+*)
 
 fun head_concat :: "'a list \<Rightarrow> 'a list list \<Rightarrow> 'a list list" where
   "head_concat a Nil = Nil" |

@@ -1,5 +1,5 @@
 theory CKA
-  imports Main
+  imports Main HOL.Set ShuffleLanguages
 begin
 
 (*
@@ -41,14 +41,17 @@ begin
 (* ac_simps makes a statement available for simplifiers that
 use commutativity and associativity *)
 
+text "Here we define monoids and semirings,
+      as locales."
+
 locale monoid =
   fixes
     compose :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "." 70) and
     unit :: 'a ("1")
   assumes
-    one_is_right_neuter [simp] :
+    one_is_right_neuter [ simp ] :
       " x.1 = x " and
-    one_is_left_neuter [simp] :
+    one_is_left_neuter [ simp ] :
       " 1.x = x "
 
 locale commutative_monoid =
@@ -82,7 +85,9 @@ locale idempotent_semiring =
     one :: 'a ("1") +
   assumes
     plus_is_idempotent [simp] :
-      " plus a a = a "
+      " plus a a = a " 
+
+(* Natural order and complete lattices *)
 
 locale natural_order_semiring =
   fixes
@@ -106,21 +111,47 @@ locale complete_lattice =
 
 *)
 
+(* Quantales *)
+
 (*
 class quantale =
   natural_order_semiring +
-  complete_lattice
-
-instance 
-
+  complete_lattice +
+  assumes
+    exchange_law :
+      <exchange_law>
 *)
 
 (*
 
   Exchange law
 
-
   "(((a * b);(c * d)) \<le> ((b;c) * (a;d)))"
 *)
 
-end
+text "Now we define shuffle languages
+      and instance the locales we
+      defined earlier."
+
+(* Instances *)
+
+interpretation "'a set" : commutative_monoid union "empty"
+proof
+  show "\<And>x. x \<union> {} = x"
+    by simp
+  show "\<And>x. {} \<union> x = x"
+    by simp
+  show "\<And>x y. x \<union> y = y \<union> x"
+    by (simp add: Un_commute)
+qed
+
+interpretation "'a language" : monoid language_concat "{[]}"
+proof
+  show " \<And>x. language_concat x {[]} = x "
+    by simp
+  show " \<And>x. {[]} ; x = x "
+    by simp
+qed
+
+
+     
