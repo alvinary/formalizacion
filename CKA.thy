@@ -56,12 +56,15 @@ locale idempotent_semiring =
 (* Natural order and complete lattices *)
 
 locale natural_order_semiring =
-  fixes
-    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<le>" 50) and
-    semiring plus times zero one
+  idempotent_semiring plus times zero one for
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "+" 70) and
+    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "*" 80) and
+    zero :: 'a ("0") and
+    one :: 'a ("1") and
+    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<le>" 60) +
   assumes
     induced_natural_order :
-      " plus a b = b \<longleftrightarrow> leq a b "
+      " plus a b = b \<longleftrightarrow> a \<le> b "
 
 text "Now we interpret the
       locales we defined
@@ -144,30 +147,66 @@ qed
 
 (* Quantales *)
 
-(*
-class concurrent_kleene_algebra =
-  sequential_quantale : ... +
-  concurrent_quantale : ... for
-  plus ... (+) and
-  seq ... (;) and
-  par ... (|) and
-  one ... (1) and
-  zero ... (0) +
+locale quantale =
+  is_idempotent_semiring :
+    natural_order_semiring plus times zero one leq +
+  is_complete_lattice : complete_lattice leq sup for
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" and
+    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" and
+    zero :: "'a" and
+    one :: "'a" and
+    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" and
+    sup :: "'a set \<Rightarrow> 'a" +
+  assumes
+    times_distributes_over_suprema :
+       " times a (sup A) = sup ({times a x | x. x : A}) "
+
+interpretation concat_quantale :
+  quantale "(\<union>)" "(;)" "empty" "{[]}" "(\<subseteq>)" "(\<Union>)"
+proof
+  show " \<And>a. a \<union> a = a "
+    by auto
+  show " \<And>a b. (a \<union> b = b) = (a \<subseteq> b) "
+    by auto
+  show " \<And>a A. a ; \<Union> A = \<Union> {a ; x |x. x \<in> A} "
+    unfolding concat_def
+    by fast
+qed
+
+interpretation shuffle_quantale :
+  quantale "(\<union>)" "language_shuffle" "empty" "{[]}" "(\<subseteq>)" "(\<Union>)"
+proof
+  show " \<And>a. a \<union> a = a "
+    by auto
+  show " \<And>a b. (a \<union> b = b) = (a \<subseteq> b) "
+    by auto
+  show " \<And>a A. a \<diamondop> \<Union> A = \<Union> {a \<diamondop> x |x. x \<in> A} "
+    by fast
+qed
+
+locale concurrent_kleene_algebra =
+  sequential_quantale : quantale plus seq zero one leq sup +
+  parallel_quantale : quantale plus par zero one leq sup for
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" and
+    seq :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl ";;" 70) and
+    par :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "||" 60) and
+    zero :: "'a" and
+    one :: "'a" and
+    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<le>" 60) and
+    sup :: "'a set \<Rightarrow> 'a" +
   assumes
     exchange_law :
-      <exchange_law>
-*)
+      " ((a || b) ;; (c || d)) \<le> ((a ;; c) || (b ;; d)) "
 
-(* Exchange law *)
-
-lemma cka_exchange_law :
-  " (((a \<diamondop> b);(c \<diamondop> d)) \<le> ((b;c) \<diamondop> (a;d))) "
+interpretation
+  concurrent_kleene_algebra
+    "(\<union>)" "(;)" "language_shuffle" "empty" "{[]}" "(\<subseteq>)" "(\<Union>)"
 proof
-  show " \<And>x. x \<in> (a \<diamondop> b) ; (c \<diamondop> d) \<Longrightarrow> x \<in> b ; c \<diamondop> a ; d "
-    unfolding language_concat_def
-    unfolding language_shuffle_def
-    by simp_all fast
+  show
+    " \<And>a b c d. (a \<diamondop> b) ; (c \<diamondop> d) \<subseteq> a ; c \<diamondop> b ; d "
+  unfolding language_concat_def
+  unfolding language_shuffle_def
+  by simp_all fast
 qed
 
 end
-     
