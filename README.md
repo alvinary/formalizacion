@@ -34,12 +34,12 @@ Queremos formalizar el álgebra de Kleene concurrente usando el asistente de pru
 ## Puntos dudosos y/o flojos
 
 * El _paper_ no pone una ecuación para "composition distributes over arbitrary suprema", así que no estoy seguro de haber elegido una
-  interpretación correcta. Eso no afecta al resto de las definiciones, asi que se puede corregir 'sin cambiar nada del resto'.
+  interpretación correcta. Eso no afecta al resto de las definiciones, asi que se puede corregir sin cambiar nada del resto.
 
 * La definición de reticulado completo que armé tiene varias cosas que están mal (tiene la operación de supremado como argumento
   del _locale_, y después hay que pasársela a los otros locales, que es poco prolijo).
 
 * La notación es fea e irregular (a veces `<=` o algún otro operador se podía leer como algo de Main o algo más local, e Isabelle pedía desambiguar,
-  y quedaron varoas cosas pegadas con cinta)
+  y quedaron varoas cosas pegadas con cinta).
 
 * No sabía hacer bien los imports (rompía pruebas al importar y/o no encontraba los módulos), así que copié y pegué directamente un par de cosas.
