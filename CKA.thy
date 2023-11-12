@@ -152,12 +152,16 @@ class quantale =
       <exchange_law>
 *)
 
-(*
+(* Exchange law *)
 
-  Exchange law
-
-  "(((a * b);(c * d)) \<le> ((b;c) * (a;d)))"
-*)
+lemma cka_exchange_law :
+  " (((a \<diamondop> b);(c \<diamondop> d)) \<le> ((b;c) \<diamondop> (a;d))) "
+proof
+  show " \<And>x. x \<in> (a \<diamondop> b) ; (c \<diamondop> d) \<Longrightarrow> x \<in> b ; c \<diamondop> a ; d "
+    unfolding language_concat_def
+    unfolding language_shuffle_def
+    by simp_all fast
+qed
 
 end
      
