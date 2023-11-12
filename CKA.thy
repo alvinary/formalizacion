@@ -126,27 +126,33 @@ proof
     by auto
 qed
 
-(*
+(* Complete lattices *)
+
 locale complete_lattice =
   fixes
-    infimum :: "'a set \<Rightarrow> 'a" (infixl "" 60) and
-    less_or_equal :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" (infixl "" 0)
+    less_or_equal :: "'a \<Rightarrow> 'a \<Rightarrow> bool" and
+    supremum :: "'a set \<Rightarrow> 'a"
   assumes
     infimum_of_set :
-      " ALL a :: 'a set . ALL A :: "'a set set" . "a : A ==> less_or_equal (infimum A) a "
+      " a \<in> A \<Longrightarrow> less_or_equal a (supremum A) "
 
--- top will be sigma star
--- bottom will be the empty set
--- leq is the induced natural order
-
-*)
+interpretation "'a language" : complete_lattice "(\<subseteq>)" "\<Union>"
+proof
+  show " \<And>a A. a \<in> A \<Longrightarrow> a \<subseteq> \<Union> A "
+    by auto
+qed
 
 (* Quantales *)
 
 (*
-class quantale =
-  natural_order_semiring +
-  complete_lattice +
+class concurrent_kleene_algebra =
+  sequential_quantale : ... +
+  concurrent_quantale : ... for
+  plus ... (+) and
+  seq ... (;) and
+  par ... (|) and
+  one ... (1) and
+  zero ... (0) +
   assumes
     exchange_law :
       <exchange_law>
