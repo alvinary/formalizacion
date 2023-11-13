@@ -7,7 +7,7 @@ use commutativity and associativity *)
 
 (* Doing a proof inside 'Using assms' makes hypotheses available *)
 
-text "Here we define monoids and semirings,
+text "Here we define monoids and semirings
       as locales."
 
 locale monoid =
@@ -55,6 +55,14 @@ locale idempotent_semiring =
 
 (* Natural order and complete lattices *)
 
+(* Cambiando la notacion para plus por :+ la ambiguedad
+   desaparece, asi que es un problema con las scopes de
+   donde se puede leer definiciones (hipotesis)
+
+  Sugerencia de Sebastian: prefijar con un simbolito mas,
+  uniformemente
+ *)
+
 locale natural_order_semiring =
   idempotent_semiring plus times zero one for
     plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "+" 70) and
@@ -72,7 +80,8 @@ text "Now we interpret the
 
 (* Instances *)
 
-interpretation "'a set" : commutative_monoid union "empty"
+interpretation "'a set" :
+  commutative_monoid union "empty"
 proof
   show " \<And>x. x \<union> {} = x "
     by simp
@@ -82,7 +91,8 @@ proof
     by (simp add: Un_commute)
 qed
 
-interpretation "'a language" : monoid language_concat "{[]}"
+interpretation
+  "'a language" : monoid language_concat "{[]}"
 proof
   show " \<And>x. {[]} ; x = x "
     by simp
@@ -90,7 +100,8 @@ proof
     by simp
 qed
 
-interpretation union_concat_semiring : semiring union language_concat empty "{[]}"
+interpretation
+  union_concat_semiring : semiring union language_concat empty "{[]}"
 proof
   show
     " \<And>a c b. a ; (c \<union> b) = a ; c \<union> a ; b "
@@ -106,7 +117,8 @@ proof
     by fast+
 qed
 
-interpretation union_shuffle_semiring : semiring union language_shuffle empty "{[]}"
+interpretation union_shuffle_semiring :
+  semiring union language_shuffle empty "{[]}"
 proof
   show
     " \<And>a c b. a  \<diamondop> (c \<union> b) = (a \<diamondop> c) \<union> (a \<diamondop> b) "
@@ -131,17 +143,28 @@ qed
 
 (* Complete lattices *)
 
+(* Deberia extender la clase ord para no tener ese error de tipo
+   al cambiar less_or_equal por \<le> *)
+
+(* Lo ideal seria importar el complete lattice del AFP *)
+
 locale complete_lattice =
   fixes
-    less_or_equal :: "'a \<Rightarrow> 'a \<Rightarrow> bool" and
+    less_or_equal :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<le>" 60) and
     supremum :: "'a set \<Rightarrow> 'a"
   assumes
-    infimum_of_set :
-      " a \<in> A \<Longrightarrow> less_or_equal a (supremum A) "
+    supremum_is_upper_bound :
+      " a \<in> A \<Longrightarrow>  less_or_equal a (supremum A) " and
+    supremum_is_least_upper_bound :
+      " \<And> x A. (\<And> y . y : A \<Longrightarrow> y \<le> x) \<Longrightarrow> (supremum A) \<le> x "
+
+(*Deberia ser la menor cota superior, no solamente una cota superior *)
 
 interpretation "'a language" : complete_lattice "(\<subseteq>)" "\<Union>"
 proof
   show " \<And>a A. a \<in> A \<Longrightarrow> a \<subseteq> \<Union> A "
+    by auto
+  show " \<And>x A. (\<And>y. y \<in> A \<Longrightarrow> y \<subseteq> x) \<Longrightarrow> \<Union> A \<subseteq> x"
     by auto
 qed
 
