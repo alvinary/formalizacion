@@ -12,67 +12,59 @@ text "Here we define monoids and semirings
 
 locale monoid =
   fixes
-    compose :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "." 70) and
+    compose :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<odot>" 70) and
     unit :: 'a ("1")
   assumes
     one_is_right_neuter [ simp ] :
-      " x.1 = x " and
+      " x \<odot> 1 = x " and
     one_is_left_neuter [ simp ] :
-      " 1.x = x "
+      " 1 \<odot> x = x "
 
 locale commutative_monoid =
     monoid "compose" "unit" for
-      compose :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "." 70) and
+      compose :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<odot>" 70) and
       unit :: 'a ("1") +
   assumes
     composition_is_commutative [simp] :
-      "compose x y = compose y x"
+      " x \<odot> y = y \<odot> x "
 
 locale semiring =
   plus_commutative_monoid : commutative_monoid plus zero +
   times_monoid : monoid times one for
-    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "+" 70) and
-    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "*" 80) and
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<oplus>" 70) and
+    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<otimes>" 80) and
     zero :: 'a ("0") and
     one :: 'a ("1") +
   assumes
     times_distributes_over_plus :
-      "times a (plus c b) = plus (times a c) (times a b) " and
+      "a \<otimes> (c \<oplus> b) = (a \<otimes> c) \<oplus> (a \<otimes> b) " and
     zero_is_left_anihilator [simp] :
-      " times zero a = zero " and
+      " 0 \<otimes> a = 0 " and
     zero_is_right_anihilator [simp] :
-      " times a zero = zero "
+      " a \<otimes> 0 = 0 "
 
 locale idempotent_semiring =
   semiring plus times zero one for
-    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "+" 70) and
-    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "*" 80) and
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<oplus>" 70) and
+    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<otimes>" 80) and
     zero :: 'a ("0") and
     one :: 'a ("1") +
   assumes
     plus_is_idempotent [simp] :
-      " plus a a = a " 
+      " a \<oplus> a = a " 
 
-(* Natural order and complete lattices *)
-
-(* Cambiando la notacion para plus por :+ la ambiguedad
-   desaparece, asi que es un problema con las scopes de
-   donde se puede leer definiciones (hipotesis)
-
-  Sugerencia de Sebastian: prefijar con un simbolito mas,
-  uniformemente
- *)
+(* Natural order *)
 
 locale natural_order_semiring =
   idempotent_semiring plus times zero one for
-    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "+" 70) and
-    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "*" 80) and
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<oplus>" 70) and
+    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<otimes>" 80) and
     zero :: 'a ("0") and
     one :: 'a ("1") and
-    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<le>" 60) +
+    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<preceq>" 60) +
   assumes
     induced_natural_order :
-      " plus a b = b \<longleftrightarrow> a \<le> b "
+      " a \<oplus> b = b \<longleftrightarrow> a \<preceq> b "
 
 text "Now we interpret the
       locales we defined
@@ -146,17 +138,18 @@ qed
 (* Deberia extender la clase ord para no tener ese error de tipo
    al cambiar less_or_equal por \<le> *)
 
-(* Lo ideal seria importar el complete lattice del AFP *)
+(* Lo ideal seria importar el complete lattice y
+   las otras estructuras algebraicas del AFP *)
 
 locale complete_lattice =
   fixes
-    less_or_equal :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<le>" 60) and
-    supremum :: "'a set \<Rightarrow> 'a"
+    less_or_equal :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<sqsubseteq>" 60) and
+    supremum :: "'a set \<Rightarrow> 'a" ("\<Squnion>")
   assumes
     supremum_is_upper_bound :
       " a \<in> A \<Longrightarrow>  less_or_equal a (supremum A) " and
     supremum_is_least_upper_bound :
-      " \<And> x A. (\<And> y . y : A \<Longrightarrow> y \<le> x) \<Longrightarrow> (supremum A) \<le> x "
+      " \<And> x A. (\<And> y . y : A \<Longrightarrow> y \<sqsubseteq> x) \<Longrightarrow> (\<Squnion> A) \<sqsubseteq> x "
 
 (*Deberia ser la menor cota superior, no solamente una cota superior *)
 
