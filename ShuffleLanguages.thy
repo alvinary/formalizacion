@@ -76,12 +76,4 @@ lemma shuffle_one_right [simp] :
   unfolding language_shuffle_def
   by auto
 
-lemma inclusion_forall : "(\<And> x. x : A \<Longrightarrow>  x : B) \<Longrightarrow> A \<subseteq> B"
-  by auto
-
-(*
-lemma shuffle_exchange_law : "(A \<diamondop> B) ; (C \<diamondop> D) \<subseteq> (A ; C) \<diamondop> (B ; D)"
-  sorry
-*)
-
 end
