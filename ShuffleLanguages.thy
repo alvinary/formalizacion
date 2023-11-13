@@ -46,11 +46,6 @@ termination by lexicographic_order
 definition language_shuffle :: "'a language \<Rightarrow> 'a language \<Rightarrow> 'a language" (infixr "\<diamondop>" 65) where
   " A \<diamondop> B = Union {shuffles xs ys | xs ys. xs : A & ys : B} "
 
-lemma shuffle_intro [simp, intro] :
-  " s : A & t : B \<Longrightarrow> (shuffles s t) \<subseteq> A \<diamondop> B "
-  unfolding language_shuffle_def
-  sorry
-
 lemma shuffle_union_distribute [simp] :
   " A \<diamondop> (B \<union> C) = (A \<diamondop> B) \<union> (A \<diamondop> C) "
   unfolding language_shuffle_def
