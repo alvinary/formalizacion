@@ -135,5 +135,23 @@ proof
     by auto
 qed
 
-end
+interpretation union_shuffle_quantale :
+  quantale "(\<union>)" "(\<parallel>)" "empty" "(\<subseteq>)" "\<Union>"
+proof
+  show " \<And>a A. a \<parallel> \<Union> A =  \<Union> {a \<parallel> x |x. x \<in> A} "
+    unfolding Shuffle_def
+    by auto
+  show "  \<And>x A. (\<And>y. y \<in> A \<Longrightarrow> y \<subseteq> x) \<Longrightarrow> \<Union> A \<subseteq> x "
+    unfolding Shuffle_def
+    by auto
+qed
 
+interpretation shuffle_languages_cka :
+  concurrent_kleene_algebra "(\<union>)" "(@@)" "(\<parallel>)" "empty" "(\<subseteq>)" "\<Union>"
+proof
+  show "\<And>a b c d. a \<parallel> b @@ c \<parallel> d \<subseteq> (a @@ c) \<parallel> (b @@ d)"
+    unfolding Shuffle_def conc_def
+    by simp_all fast
+qed
+
+end
