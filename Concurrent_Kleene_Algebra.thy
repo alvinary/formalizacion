@@ -30,7 +30,7 @@ text "Now we interpret the locales we defined earlier
 
 interpretation
   union_concat_semiring :
-    idempotent_semiring union conc empty
+    natural_order_semiring "(\<union>)" "(@@)" "{}" "(\<subseteq>)"
 proof
   show
     " \<And>a b c. a \<union> b \<union> c = a \<union> (b \<union> c)"
@@ -62,11 +62,14 @@ proof
   show
     " \<And>a. a \<union> a = a "
     by auto
+  show
+    " \<And>a b. (a \<union> b = b) = (a \<subseteq> b) "
+    by auto
 qed
 
 interpretation
   union_shuffle_semiring :
-    idempotent_semiring union Shuffle empty
+    natural_order_semiring "(\<union>)" "(\<parallel>)" "{}" "(\<subseteq>)"
 proof
   show
     " \<And>a b c. (a \<parallel> b) \<parallel> c =  a \<parallel> b \<parallel> c "
@@ -89,37 +92,46 @@ proof
   show
     " \<And>a. a \<union> a = a "
     by auto
+  show
+    " \<And>a b. (a \<union> b = b) = (a \<subseteq> b) "
+    by auto
 qed
 
 text "And here we define Quantales"
 
 locale quantale =
-  idempotent_semiring plus times zero for
-    plus :: "'a::ord \<Rightarrow> 'a::ord \<Rightarrow> 'a::ord" (infixl "\<oplus>" 70) and
-    times :: "'a::ord \<Rightarrow> 'a::ord \<Rightarrow> 'a::ord" (infixl "\<otimes>" 80) and
-    zero :: "'a::ord" ("0") and
-    sup :: "'a::ord set  \<Rightarrow> 'a::ord" ("\<Squnion>") +
+  natural_order_semiring plus times zero leq for
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<oplus>" 70) and
+    times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<otimes>" 80) and
+    zero :: "'a" ("0") and
+    leq :: "'a \<Rightarrow> 'a\<Rightarrow> bool" (infixl "\<sqsubseteq>" 40) and
+    sup :: "'a set  \<Rightarrow> 'a" ("\<Squnion>") +
   assumes
     times_distributes_over_suprema :
-      "  a \<otimes> (\<Squnion> A) = \<Squnion> ({ a \<otimes> x | x. x : A }) "
+      "  a \<otimes> (\<Squnion> A) = \<Squnion> ({ a \<otimes> x | x. x : A }) " and
+    is_complete_lattice :
+      " \<And> x A. (\<And> y . y : A \<Longrightarrow> y \<sqsubseteq> x) \<Longrightarrow> (\<Squnion> A) \<sqsubseteq> x "
 
 locale concurrent_kleene_algebra =
-  sequential_quantale : quantale plus seq zero sup +
-  parallel_quantale : quantale plus par zero sup for
-    plus :: "'a::ord \<Rightarrow> 'a::ord \<Rightarrow> 'a::ord" and
-    seq :: "'a::ord \<Rightarrow> 'a::ord \<Rightarrow> 'a::ord" (infixl ";;" 70) and
-    par :: "'a::ord \<Rightarrow> 'a::ord \<Rightarrow> 'a::ord" (infixl "||" 60) and
-    zero :: "'a::ord" ("0") and
-    sup :: "'a::ord set \<Rightarrow> 'a::ord" +
+  sequential_quantale : quantale plus seq zero leq sup +
+  parallel_quantale : quantale plus par zero leq sup for
+    plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" and
+    seq :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl ";;" 70) and
+    par :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "||" 60) and
+    zero :: "'a" ("0") and
+    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<sqsubseteq>" 40) and
+    sup :: "'a set \<Rightarrow> 'a" +
   assumes
     exchange_law :
-      " ((a || b) ;; (c || d)) \<le> ((a ;; c) || (b ;; d)) "
+      " ((a || b) ;; (c || d)) \<sqsubseteq> ((a ;; c) || (b ;; d)) "
 
 interpretation union_concatenation_quantale :
-  quantale "(\<union>)" "(@@)" "empty" "\<Union>"
+  quantale "(\<union>)" "(@@)" "empty" "(\<subseteq>)" "\<Union>"
 proof
   show " \<And>a A. a @@ \<Union> A = \<Union> {a @@ x |x. x \<in> A} "
     unfolding conc_def
+    by auto
+  show " \<And>x A. (\<And>y. y \<in> A \<Longrightarrow> y \<subseteq> x) \<Longrightarrow> \<Union> A \<subseteq> x"
     by auto
 qed
 
