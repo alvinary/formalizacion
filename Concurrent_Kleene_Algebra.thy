@@ -154,14 +154,14 @@ locale concurrent_kleene_algebra =
   parallel_quantale : quantale one plus par zero leq sup for
     one :: "'a" ("1") and
     plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" and
-    seq :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl ";;" 70) and
-    par :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "||" 60) and
+    seq :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl ";" 70) and
+    par :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "|" 60) and
     zero :: "'a" ("0") and
     leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<sqsubseteq>" 40) and
     sup :: "'a set \<Rightarrow> 'a" +
   assumes
     exchange_law :
-      " ((a || b) ;; (c || d)) \<sqsubseteq> ((a ;; c) || (b ;; d)) "
+      " a | b ; c | d \<sqsubseteq> a ; c | b ; d "
 
 interpretation union_concatenation_quantale :
   quantale "{[]}" "(\<union>)" "(@@)" "empty" "(\<subseteq>)" "\<Union>"
@@ -187,13 +187,15 @@ qed
 interpretation shuffle_languages_cka :
   concurrent_kleene_algebra "{[]}" "(\<union>)" "(@@)" "(\<parallel>)" "empty" "(\<subseteq>)" "\<Union>"
 proof
-  show "\<And>a b c d. a \<parallel> b @@ c \<parallel> d \<subseteq> (a @@ c) \<parallel> (b @@ d)"
+  show "  \<And>a b c d. (a \<parallel> (b @@ c)) \<parallel> d \<subseteq> (a @@ c) \<parallel> (b @@ d) "
     unfolding Shuffle_def conc_def
     by simp_all blast
 qed
 
+(*
 lemma (in concurrent_kleene_algebra)
-  par_contains_seq : " a ;; b \<sqsubseteq> a || b"
-  sorry
-  
+  par_contains_seq : " a ; b \<sqsubseteq> a | b "
+  sorry 
+*)
+
 end
