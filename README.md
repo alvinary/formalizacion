@@ -31,19 +31,21 @@ Queremos formalizar el álgebra de Kleene concurrente usando el asistente de pru
 
 * Lo único que parece que todavía no hay en el _proof archive_ es definiciones que relacionen a las álgebras de Kleene concurrentes y los _shuffle languages_.
 
+* El _paper_ no pone una ecuación para "composition distributes over arbitrary suprema", así que no estoy seguro de haber elegido una
+  interpretación correcta (elegí una parecida a la que usa Struth en su módulo de quantales).
+
 ## Puntos dudosos y/o flojos
 
-* El _paper_ no pone una ecuación para "composition distributes over arbitrary suprema", así que no estoy seguro de haber elegido una
-  interpretación correcta (elegí una parecida a la que usa Struth en su módulo de quantales). De todos modos, eso no afecta al resto de las
-  definiciones, asi que se puede corregir sin cambiar nada del resto.
+* Puse que el supremo era la menor cota superior como hipótesis/_assumption_ del un _locale_ en vez de importar e
+  instanciar la clase `complete_lattice`.
 
-* La definición de reticulado completo que armé tiene varias cosas que están mal (tiene la operación de supremado como argumento
-  del _locale_, y después hay que pasársela a los otros locales, que es poco prolijo).
+* Puse la operación de supremado y el órden parcial inducido de un semianillo idempotente como argumentos de sus _locales_, que está bastante feo.
 
-* La notación es fea e irregular. Por ejemplo, a veces el 'menor o igual' o alguna operación se podía leer como algo de otro módulo,
-  Main, o algo más local, e Isabelle pedía desambiguar, y usando el nombre de la función en vez del infijo con el símbolo se resolvía,
-  y quedó todo bastante feo / pegado con cinta.
+## Puntos flojos corregidos
 
-* No sabía hacer bien los _imports_ (rompía pruebas al importar y/o no encontraba los módulos), así que copié y pegué directamente
-  un par de cosas.
+* Ahora los semianillos y las operaciones con lenguajes salen todas de módulos estándar importados debidamente.
+
+* Arreglé las irregularidades con la notación que usaba para 'parchar' la ambiguedad de las expresiones.
+
+* Ahora el supremo es un supremo de verdad.
 
