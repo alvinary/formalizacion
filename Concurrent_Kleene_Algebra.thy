@@ -33,8 +33,36 @@ locale natural_order_semiring =
       " a \<preceq> a "
 
 text "Now we interpret the locales we defined earlier
-      for union and two operations over languages, which 
-      are shuffle and concatenation."
+      for set union and two operations on languages, 
+      shuffle and concatenation."
+
+lemma concatenation_is_associative [simp] :
+  " (a @ b) @ c = a @ (b @ c) "
+  by auto
+
+lemma shuffle_is_commutative [simp] :
+  " shuffles \<alpha> \<beta> = shuffles \<beta> \<alpha> "
+  by (metis shuffles_commutes)
+
+lemma Shuffle_is_commutative [simp] :
+  " Shuffle A B = Shuffle B A "
+  sorry
+
+lemma Shuffle_is_associative [simp] :
+  " Shuffle (Shuffle A B) C = Shuffle A (Shuffle B C) "
+  sorry
+
+(*
+proof
+  have A_par_B_is_def :
+    "Shuffle A B = \<Union> {shuffles \<alpha> \<beta> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B }"
+    sorry
+  have
+    "Shuffle A B = \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B }"
+    sorry (* definition and commutatitivty *)
+  
+qed
+*)
 
 interpretation
   union_concat_semiring :
@@ -47,7 +75,7 @@ proof
   show
     " \<And>a b c. (a @@ b) @@ c = a @@ b @@ c "
     unfolding conc_def
-    by simp_all blast
+    by (metis conc_assoc conc_def)
   show
     " \<And>a. {[]} @@ a = a "
     by auto
@@ -94,16 +122,7 @@ interpretation
 proof
   show
     " \<And>a b c. (a \<parallel> b) \<parallel> c =  a \<parallel> b \<parallel> c "
-    unfolding Shuffle_def
-    by simp_all blast
-  show
-    " \<And>a b c. (a \<union> b) \<parallel> c = a \<parallel> c \<union> b \<parallel> c "
-    unfolding Shuffle_def
-    by blast
-  show
-    " \<And>a b c. a \<parallel> (b \<union> c) = a \<parallel> b \<union> a \<parallel> c "
-    unfolding Shuffle_def
-    by blast
+    by (metis Shuffle_is_associative)
   show
     " \<And>a. {} \<parallel> a = {} "
     by auto
@@ -131,6 +150,14 @@ proof
   show
     "  \<And>a. a \<subseteq> a "
     by auto
+  show
+    " \<And>a b c. (a \<union> b) \<parallel> c = a \<parallel> c \<union> b \<parallel> c "
+    unfolding Shuffle_def
+    sorry
+  show
+    " \<And>a b c. a \<parallel> (b \<union> c) = a \<parallel> b \<union> a \<parallel> c "
+    unfolding Shuffle_def
+    sorry
 qed
 
 text "And here we define Quantales"
@@ -162,6 +189,37 @@ locale concurrent_kleene_algebra =
   assumes
     exchange_law :
       " (a || b) ; (c || d) \<sqsubseteq> (b ; c) || (a ; d) "
+begin
+
+lemma one_is_seq_neuter_right [simp] :
+  " x ; 1 = x "
+  by auto
+
+lemma one_is_seq_neuter_left [simp] :
+  " 1 ; x = x "
+  by auto
+
+lemma one_is_par_neuter_right [simp] :
+  " x || 1 = x "
+  by auto
+
+lemma one_is_par_neuter_left [simp] :
+  " 1 || x = x "
+  by auto
+
+lemma par_is_commutative [simp] :
+  " x || y = y || x  "
+  sorry
+
+lemma single_par_exchange :
+  " (x || y) ; z \<sqsubseteq> x || (b;c) "
+  sorry
+
+lemma par_is_associative [simp] :
+  "(x || y) || z = x || (y || z)"
+  sorry
+
+end
 
 interpretation union_concatenation_quantale :
   quantale "{[]}" "(\<union>)" "(@@)" "empty" "(\<subseteq>)" "\<Union>"
@@ -189,31 +247,44 @@ interpretation shuffle_languages_cka :
 proof
   show "  \<And>a b c d. a \<parallel> b @@ c \<parallel> d \<subseteq> (b @@ c) \<parallel> (a @@ d) "
     unfolding Shuffle_def conc_def
-    by simp_all blast
+    sorry
 qed
 
-context concurrent_kleene_algebra
-begin
-lemma one_is_seq_neuter_right [simp] :
-  " x ; 1 = x "
-  by auto
+qed
+end
+*)
+end
 
-lemma one_is_seq_neuter_left [simp] :
-  " 1 ; x = x "
-  by auto
+(*
+lemma par_contains_seq :
+  " x ; w \<sqsubseteq> x | w "
+proof -
+  assume exchange : " (x | y) ; (z | w) \<sqsubseteq> (x ; z) | (y ; w) "
+  assume y_is_one : " y = 1 "
+  assume z_is_one : " z = 1 "
+    have
+    replace_by_one :
+    " (x | 1) ; (1 | w) \<sqsubseteq> (x ; 1) | (1 ; w) "
+    by (metis
+        exchange
+        z_is_one
+        y_is_one)
+  have
+    simplify_pars :
+    " x ; w  \<sqsubseteq> (x ; 1) | (1 ; w) "
+    by (metis
+        replace_by_one
+        one_is_par_neuter_right
+        one_is_par_neuter_left)
+  have
+    simplify_seqs :
+    " x ; w  \<sqsubseteq> x | w "
+    by (metis simplify_pars
+        one_is_seq_neuter_right
+        one_is_seq_neuter_left)
+*)
 
-lemma one_is_par_neuter_right [simp] :
-  " x || 1 = x "
-  by auto
-
-lemma one_is_par_neuter_left [simp] :
-  " 1 || x = x "
-  by auto
-
-lemma single_par_exchange :
-  " (x || y) ; z \<sqsubseteq> x || (b;c) "
-  sorry
-
+(*
 lemma par_is_commutative [simp] :
   " x || y = y || x "
 proof -
@@ -252,67 +323,4 @@ proof -
     (* by (metis
           symmetric_order
           leq_is_antisymmetric) *)
-qed
-end
 
-end
-
-(*
-lemma par_is_commutative [simp] :
-  " x || y = y || x "
-  
-  {aa} || {bb, dd} = {bb, dd} || {aa} =
-  {
-   aabb,
-   abab,
-   abba,
-   baba,
-   baab,
-   bbaa,
-   aadd,
-   adad,
-   adda,
-   dada,
-   daad,
-   ddaa,
-  }
-  
-  sanity check: 
-  4! / (2!)(2!) = 4 3 2 1 / 4 = 3 2 = 6
-  
-  (x | y) ; (z | w) <= (x ; z) | (y ; w) =
-  	{ (w/1, x/1) }
-  (1 | y) ; (z | 1) <= (1 ; z) | (y ; 1) =
-  	{  }
-  (1 | y) ; (z | 1) <= (1 ; z) | (y ; 1) =
-  	
-*)
-
-(*
-lemma par_contains_seq :
-  " x ; w \<sqsubseteq> x | w "
-proof -
-  assume exchange : " (x | y) ; (z | w) \<sqsubseteq> (x ; z) | (y ; w) "
-  assume y_is_one : " y = 1 "
-  assume z_is_one : " z = 1 "
-    have
-    replace_by_one :
-    " (x | 1) ; (1 | w) \<sqsubseteq> (x ; 1) | (1 ; w) "
-    by (metis
-        exchange
-        z_is_one
-        y_is_one)
-  have
-    simplify_pars :
-    " x ; w  \<sqsubseteq> (x ; 1) | (1 ; w) "
-    by (metis
-        replace_by_one
-        one_is_par_neuter_right
-        one_is_par_neuter_left)
-  have
-    simplify_seqs :
-    " x ; w  \<sqsubseteq> x | w "
-    by (metis simplify_pars
-        one_is_seq_neuter_right
-        one_is_seq_neuter_left)
-*)
