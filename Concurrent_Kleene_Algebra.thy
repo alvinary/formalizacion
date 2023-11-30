@@ -208,63 +208,108 @@ lemma one_is_par_neuter_left [simp] :
   " 1 || x = x "
   by auto
 
-(*
-lemma par_is_commutative [simp] :
-  " x || y = y || x  "
-proof -
-  have " (x || y) ; (z || w) \<sqsubseteq> (y ; z) || (x ; w) " by (metis local.exchange_law)
-  then have " (x || y) ; (1 || 1) \<sqsubseteq> (y ; 1) || (x ; 1) " sorry
-  then have " (x || y) = (y || x) " 
-qed
-*)
-
 lemma par_is_commutative [simp] :
   " x || y = y || x "
 proof -
-  have exchange :
+  have
+    replace_by_one :
     " (x || y) ; (1 || 1) \<sqsubseteq> (y ; 1) || (x ; 1) "
     by (metis exchange_law)
-  have replace_by_one :
-    " (x || y) ; (1 || 1) \<sqsubseteq> (y ; 1) || (x ; 1) "
-    by (metis exchange)
-  have simplify_ones :
+  have
+    simplify_ones :
     " (x || y ) \<sqsubseteq> (y || x) "
     by (metis
           replace_by_one
           one_is_seq_neuter_right
           one_is_par_neuter_right)
-  have swapped_exchange :
+  have 
+    swapped_exchange :
     " (y || x) ; (1 || 1) \<sqsubseteq> (x ; 1) || (y ; 1) "
     by (metis exchange_law)
-  have swapped_replace_by_one : 
+  have 
+    swapped_replace_by_one : 
     " (y || x) ; (1 || 1) \<sqsubseteq> (x ; 1) || (y ; 1) "
     by (metis swapped_exchange)
-  have swapped_simplify_ones :
+  have 
+    swapped_simplify_ones :
     " (y || x ) \<sqsubseteq> (x || y) "
     by (metis
           swapped_replace_by_one
           one_is_seq_neuter_right
           one_is_par_neuter_right)
-  have symmetric_order :
+  have 
+    symmetric_order :
     "(y || x ) \<sqsubseteq> (x || y) \<and> (x || y ) \<sqsubseteq> (y || x) "
     by (metis
           swapped_simplify_ones
           simplify_ones)
-  have commutativity :
-    " (y || x) = (x || y) "
-    using natural_order_semiring.axioms
-    unfolding natural_order_semiring.axioms
+  show
+    " (x || y) = (y || x) "
     by (metis
         symmetric_order
-        leq_is_antisymmetric)
+        parallel_quantale.leq_is_antisymmetric)
+qed
 
-lemma single_par_exchange :
-  " (x || y) ; z \<sqsubseteq> x || (b;c) "
-  sorry
+lemma par_contains_seq :
+  " x ; y \<sqsubseteq> x || y "
+proof -
+  have 
+    long_contains :
+    " (1 || x) ; (1 || y) \<sqsubseteq> (x ; 1) || (1 ; y) "
+    by (metis exchange_law)
+  have
+    simplify_pars :
+    " x ; y  \<sqsubseteq> (x ; 1) || (1 ; y) "
+    by (metis long_contains one_is_par_neuter_left one_is_par_neuter_right )
+  have
+    simplify_seqs :
+    " x ; y  \<sqsubseteq> x || y "
+    by (metis
+          simplify_pars
+          one_is_seq_neuter_left
+          one_is_seq_neuter_right )
+  show
+    " x ; y \<sqsubseteq> x || y " 
+    by (metis simplify_seqs) 
+qed
+
+lemma alternative_exchange :
+  "(x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w) "
+proof -
+  have renamed_exchange :
+    "(y || x) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w)"
+    by (metis exchange_law)
+  have commute_exchange :
+    "(x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w)"
+    by (metis renamed_exchange par_is_commutative)
+  show " (x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w) "
+    by (metis commute_exchange)
+qed
+
+lemma par_extraction :
+  " (x || y) ; z \<sqsubseteq> x || (y ; z) "
+proof -
+  have partial_exchange :
+    " (x || y) ; (1 || z) \<sqsubseteq> (x ; 1) || (y ; z) "
+    by (metis alternative_exchange)
+  then show " (x || y) ; z \<sqsubseteq> x || (y ; z) "
+    by simp
+qed
+  
+
+lemma seq_extraction :
+  " (x || y) ; z \<sqsubseteq> x || (y ; z) "
+proof -
+  have partial_alternative :
+    " (x || y) ; (1 || z) \<sqsubseteq> (x ; 1) || (y ; z) "
+    by (metis alternative_exchange)
+  then show " (x || y) ; z \<sqsubseteq> x || (y ; z) "
+    by (simp)
+qed
 
 lemma par_is_associative [simp] :
   "(x || y) || z = x || (y || z)"
-  sorry
+  by (metis local.parallel_quantale.mult_assoc)
 
 end
 
