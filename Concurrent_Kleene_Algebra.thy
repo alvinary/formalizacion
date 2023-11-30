@@ -261,16 +261,10 @@ proof -
     simplify_pars :
     " x ; y  \<sqsubseteq> (x ; 1) || (1 ; y) "
     by (metis long_contains one_is_par_neuter_left one_is_par_neuter_right )
-  have
+  then show
     simplify_seqs :
     " x ; y  \<sqsubseteq> x || y "
-    by (metis
-          simplify_pars
-          one_is_seq_neuter_left
-          one_is_seq_neuter_right )
-  show
-    " x ; y \<sqsubseteq> x || y " 
-    by (metis simplify_seqs) 
+    by (simp)
 qed
 
 lemma alternative_exchange :
@@ -279,11 +273,8 @@ proof -
   have renamed_exchange :
     "(y || x) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w)"
     by (metis exchange_law)
-  have commute_exchange :
-    "(x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w)"
+  show "(x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w)"
     by (metis renamed_exchange par_is_commutative)
-  show " (x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w) "
-    by (metis commute_exchange)
 qed
 
 lemma par_extraction :
@@ -376,5 +367,3 @@ proof -
     (* by (metis
           symmetric_order
           leq_is_antisymmetric) *)
-
-*)
