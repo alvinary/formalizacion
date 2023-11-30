@@ -168,7 +168,7 @@ locale quantale =
     plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<oplus>" 70) and
     times :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl "\<otimes>" 80) and
     zero :: "'a" ("0") and
-    leq :: "'a \<Rightarrow> 'a\<Rightarrow> bool" (infixl "\<sqsubseteq>" 40) and
+    leq :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infixl "\<sqsubseteq>" 40) and
     sup :: "'a set  \<Rightarrow> 'a" ("\<Squnion>") +
   assumes
     times_distributes_over_suprema :
@@ -178,7 +178,8 @@ locale quantale =
 
 locale concurrent_kleene_algebra =
   sequential_quantale : quantale one plus seq zero leq sup +
-  parallel_quantale : quantale one plus par zero leq sup for
+  parallel_quantale : quantale one plus par zero leq sup 
+  for
     one :: "'a" ("1") and
     plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" and
     seq :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixl ";" 70) and
@@ -207,9 +208,55 @@ lemma one_is_par_neuter_left [simp] :
   " 1 || x = x "
   by auto
 
+(*
 lemma par_is_commutative [simp] :
   " x || y = y || x  "
-  sorry
+proof -
+  have " (x || y) ; (z || w) \<sqsubseteq> (y ; z) || (x ; w) " by (metis local.exchange_law)
+  then have " (x || y) ; (1 || 1) \<sqsubseteq> (y ; 1) || (x ; 1) " sorry
+  then have " (x || y) = (y || x) " 
+qed
+*)
+
+lemma par_is_commutative [simp] :
+  " x || y = y || x "
+proof -
+  have exchange :
+    " (x || y) ; (1 || 1) \<sqsubseteq> (y ; 1) || (x ; 1) "
+    by (metis exchange_law)
+  have replace_by_one :
+    " (x || y) ; (1 || 1) \<sqsubseteq> (y ; 1) || (x ; 1) "
+    by (metis exchange)
+  have simplify_ones :
+    " (x || y ) \<sqsubseteq> (y || x) "
+    by (metis
+          replace_by_one
+          one_is_seq_neuter_right
+          one_is_par_neuter_right)
+  have swapped_exchange :
+    " (y || x) ; (1 || 1) \<sqsubseteq> (x ; 1) || (y ; 1) "
+    by (metis exchange_law)
+  have swapped_replace_by_one : 
+    " (y || x) ; (1 || 1) \<sqsubseteq> (x ; 1) || (y ; 1) "
+    by (metis swapped_exchange)
+  have swapped_simplify_ones :
+    " (y || x ) \<sqsubseteq> (x || y) "
+    by (metis
+          swapped_replace_by_one
+          one_is_seq_neuter_right
+          one_is_par_neuter_right)
+  have symmetric_order :
+    "(y || x ) \<sqsubseteq> (x || y) \<and> (x || y ) \<sqsubseteq> (y || x) "
+    by (metis
+          swapped_simplify_ones
+          simplify_ones)
+  have commutativity :
+    " (y || x) = (x || y) "
+    using natural_order_semiring.axioms
+    unfolding natural_order_semiring.axioms
+    by (metis
+        symmetric_order
+        leq_is_antisymmetric)
 
 lemma single_par_exchange :
   " (x || y) ; z \<sqsubseteq> x || (b;c) "
@@ -250,9 +297,6 @@ proof
     sorry
 qed
 
-qed
-end
-*)
 end
 
 (*
@@ -284,43 +328,8 @@ proof -
         one_is_seq_neuter_left)
 *)
 
-(*
-lemma par_is_commutative [simp] :
-  " x || y = y || x "
-proof -
-  have exchange : " (x || y) ; (z || w) \<sqsubseteq> (y ; z) || (x ; w) " by (metis exchange_law)
-  assume z_is_one : "z = 1"
-  assume w_is_one : "w = 1"
-  have replace_by_one :
-    " (x || y) ; (1 || 1) \<sqsubseteq> (y ; 1) || (x ; 1) "
-    by (metis exchange z_is_one w_is_one)
-  have simplify_ones :
-    " (x || y ) \<sqsubseteq> (y || x) "
-    by (metis
-          replace_by_one
-          one_is_seq_neuter_right
-          one_is_par_neuter_right)
-  have swapped_exchange :
-    " (y || x) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w) "
-    by (metis exchange_law)
-  have swapped_replace_by_one : 
-    " (y || x) ; (1 || 1) \<sqsubseteq> (x ; 1) || (y ; 1) "
-    by (metis swapped_exchange z_is_one w_is_one)
-  have swapped_simplify_ones :
-    " (y || x ) \<sqsubseteq> (x || y) "
-    by (metis
-          swapped_replace_by_one
-          one_is_seq_neuter_right
-          one_is_par_neuter_right)
-  have symmetric_order :
-    "(y || x ) \<sqsubseteq> (x || y) \<and> (x || y ) \<sqsubseteq> (y || x) "
-    by (metis
-          swapped_simplify_ones
-          simplify_ones)
-  have commutativity :
-    " (y || x) = (x || y) "
-    sorry
     (* by (metis
           symmetric_order
           leq_is_antisymmetric) *)
 
+*)
