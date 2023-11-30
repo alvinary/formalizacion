@@ -212,57 +212,44 @@ lemma par_is_commutative [simp] :
   " x || y = y || x "
 proof -
   have
-    replace_by_one :
+    exchange :
     " (x || y) ; (1 || 1) \<sqsubseteq> (y ; 1) || (x ; 1) "
     by (metis exchange_law)
-  have
+  then have
     simplify_ones :
     " (x || y ) \<sqsubseteq> (y || x) "
-    by (metis
-          replace_by_one
-          one_is_seq_neuter_right
-          one_is_par_neuter_right)
-  have 
+    by (simp)
+  then have 
     swapped_exchange :
     " (y || x) ; (1 || 1) \<sqsubseteq> (x ; 1) || (y ; 1) "
     by (metis exchange_law)
-  have 
-    swapped_replace_by_one : 
-    " (y || x) ; (1 || 1) \<sqsubseteq> (x ; 1) || (y ; 1) "
-    by (metis swapped_exchange)
-  have 
+  then have 
     swapped_simplify_ones :
     " (y || x ) \<sqsubseteq> (x || y) "
-    by (metis
-          swapped_replace_by_one
-          one_is_seq_neuter_right
-          one_is_par_neuter_right)
+    by (simp)
   have 
     symmetric_order :
     "(y || x ) \<sqsubseteq> (x || y) \<and> (x || y ) \<sqsubseteq> (y || x) "
     by (metis
           swapped_simplify_ones
           simplify_ones)
-  show
+  then show
     " (x || y) = (y || x) "
-    by (metis
-        symmetric_order
-        parallel_quantale.leq_is_antisymmetric)
+    by (metis parallel_quantale.leq_is_antisymmetric)
 qed
 
 lemma par_contains_seq :
   " x ; y \<sqsubseteq> x || y "
 proof -
-  have 
-    long_contains :
+  have
+    exchange :
     " (1 || x) ; (1 || y) \<sqsubseteq> (x ; 1) || (1 ; y) "
     by (metis exchange_law)
-  have
+  then have
     simplify_pars :
     " x ; y  \<sqsubseteq> (x ; 1) || (1 ; y) "
-    by (metis long_contains one_is_par_neuter_left one_is_par_neuter_right )
+    by (metis one_is_par_neuter_left one_is_par_neuter_right )
   then show
-    simplify_seqs :
     " x ; y  \<sqsubseteq> x || y "
     by (simp)
 qed
