@@ -45,24 +45,29 @@ lemma shuffle_is_commutative [simp] :
   by (metis shuffles_commutes)
 
 lemma Shuffle_is_commutative [simp] :
-  " Shuffle A B = Shuffle B A "
-  sorry
+  " A \<parallel> B = B \<parallel> A "
+proof -
+  have A_par_B_is_def :
+    " A \<parallel> B = \<Union> {shuffles \<alpha> \<beta> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
+    unfolding Shuffle_def
+    by auto
+  have swap_alpha_and_beta :
+    " A \<parallel> B = \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
+    by (simp add:A_par_B_is_def add:shuffle_is_commutative)
+  have reorder :
+    "  \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B  } = \<Union> {shuffles \<beta> \<alpha> | \<beta> \<alpha> . \<beta> \<in> B \<and> \<alpha> \<in> A } "
+    by blast
+  have B_par_A_is_def :
+    " B \<parallel> A = \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B  } "
+    unfolding Shuffle_def
+    by blast
+  show " A \<parallel> B = B \<parallel> A "
+    by (simp add:swap_alpha_and_beta add:B_par_A_is_def)
+qed
 
 lemma Shuffle_is_associative [simp] :
   " Shuffle (Shuffle A B) C = Shuffle A (Shuffle B C) "
   sorry
-
-(*
-proof
-  have A_par_B_is_def :
-    "Shuffle A B = \<Union> {shuffles \<alpha> \<beta> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B }"
-    sorry
-  have
-    "Shuffle A B = \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B }"
-    sorry (* definition and commutatitivty *)
-  
-qed
-*)
 
 interpretation
   union_concat_semiring :
@@ -321,36 +326,3 @@ proof
 qed
 
 end
-
-(*
-lemma par_contains_seq :
-  " x ; w \<sqsubseteq> x | w "
-proof -
-  assume exchange : " (x | y) ; (z | w) \<sqsubseteq> (x ; z) | (y ; w) "
-  assume y_is_one : " y = 1 "
-  assume z_is_one : " z = 1 "
-    have
-    replace_by_one :
-    " (x | 1) ; (1 | w) \<sqsubseteq> (x ; 1) | (1 ; w) "
-    by (metis
-        exchange
-        z_is_one
-        y_is_one)
-  have
-    simplify_pars :
-    " x ; w  \<sqsubseteq> (x ; 1) | (1 ; w) "
-    by (metis
-        replace_by_one
-        one_is_par_neuter_right
-        one_is_par_neuter_left)
-  have
-    simplify_seqs :
-    " x ; w  \<sqsubseteq> x | w "
-    by (metis simplify_pars
-        one_is_seq_neuter_right
-        one_is_seq_neuter_left)
-*)
-
-    (* by (metis
-          symmetric_order
-          leq_is_antisymmetric) *)
