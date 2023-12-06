@@ -54,9 +54,6 @@ proof -
   have swap_alpha_and_beta :
     " A \<parallel> B = \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
     by (simp add:A_par_B_is_def add:shuffle_is_commutative)
-  have reorder :
-    "  \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B  } = \<Union> {shuffles \<beta> \<alpha> | \<beta> \<alpha> . \<beta> \<in> B \<and> \<alpha> \<in> A } "
-    by blast
   have B_par_A_is_def :
     " B \<parallel> A = \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B  } "
     unfolding Shuffle_def
@@ -66,59 +63,91 @@ proof -
 qed
 
 lemma Shuffle_is_associative [simp] :
-  " Shuffle (Shuffle A B) C = Shuffle A (Shuffle B C) "
+  " (A \<parallel> B) \<parallel> C = A \<parallel> (B \<parallel> C) "
   sorry
+
+lemma classifier_disjunction [simp] :
+  " { x | x. x \<in> A \<or> x \<in> B} = { x | x. x \<in> A} \<union> { x | x. x \<in> B} "
+  by auto
+
+lemma distribute_classifier_disjunction [simp] :
+  " { shuffles x y | x y. (x \<in> A \<union> B) \<and> (y \<in> C) } = 
+    { shuffles x y | x y. (x \<in> A) \<and> (y \<in> C) } \<union> 
+    { shuffles x y | x y. (x \<in> B) \<and> (y \<in> C) }"
+  by auto
+
+lemma unfolded_set_union [simp] :
+  " \<Union> {S | S. S \<in> A} = {x | x. \<exists> S. S \<in> A \<and> x \<in> S } "
+  by auto
+
+lemma distribute_folded_classifier_disjunction [simp] :
+  " \<Union> { shuffles x y | x y. (x \<in> A \<union> B) \<and> (y \<in> C) } = 
+    \<Union> { shuffles x y | x y. (x \<in> A) \<and> (y \<in> C) } \<union> 
+    \<Union> { shuffles x y | x y. (x \<in> B) \<and> (y \<in> C) }"
+proof -
+  have rewrite_left_hand :
+    " \<Union> { shuffles x y | x y. (x \<in> A \<union> B) \<and> (y \<in> C) } = 
+        { x | x. \<exists> xs ys. xs \<in> (A \<union> B) \<and> ys \<in> C \<and> x \<in> shuffles xs ys } "
+    by auto
+  have distribute_rewritten_left_hand :
+    " \<Union> { shuffles x y | x y. (x \<in> A \<union> B) \<and> (y \<in> C) } = 
+        { x | x. \<exists> xs ys. xs \<in> A \<and> ys \<in> C \<and> x \<in> shuffles xs ys } \<union>
+        { x | x. \<exists> xs ys. xs \<in> B \<and> ys \<in> C \<and> x \<in> shuffles xs ys } "
+    by auto
+  have and_what_is_that :
+    " \<Union> { shuffles x y | x y. (x \<in> A \<union> B) \<and> (y \<in> C) } = 
+      \<Union> { shuffles x y | x y. x \<in> A \<and> y \<in> C } \<union>
+        { x | x. \<exists> xs ys. xs \<in> B \<and> ys \<in> C \<and> x \<in> shuffles xs ys } "
+    by auto
+  have how_about_the_rest : 
+    "  { x | x. \<exists> xs ys. xs \<in> B \<and> ys \<in> C \<and> x \<in> shuffles xs ys } = 
+         \<Union> { shuffles x y | x y. x \<in> B \<and> y \<in> C } "
+    by auto
+  have and_what_is_the_rest_then :
+    " \<Union> { shuffles x y | x y. (x \<in> A \<union> B) \<and> (y \<in> C) } = 
+      \<Union> { shuffles x y | x y. x \<in> A \<and> y \<in> C } \<union>
+      \<Union> { shuffles x y | x y. x \<in> B \<and> y \<in> C } "
+    by (metis how_about_the_rest and_what_is_that)
+  show " \<Union> {shuffles x y |x y. x \<in> A \<union> B \<and> y \<in> C} =
+         \<Union> {shuffles x y |x y. x \<in> A \<and> y \<in> C} \<union>
+         \<Union> {shuffles x y |x y. x \<in> B \<and> y \<in> C} "
+    by (metis and_what_is_the_rest_then)
+qed
+
+lemma left_par_distribution [simp] :
+  " a \<parallel> (b \<union> c) = a \<parallel> b \<union> a \<parallel> c "
+proof -
+  have " (b \<union> c) \<parallel> a = b \<parallel> a \<union> c \<parallel> a "
+    unfolding Shuffle_def
+    by (metis distribute_folded_classifier_disjunction)
+  then have " (b \<union> c) \<parallel> a = a \<parallel> b \<union> a \<parallel> c "
+    by (simp)
+  then show " a \<parallel> (b \<union> c) = a \<parallel> b \<union> a \<parallel> c "
+    by (simp)
+qed
 
 interpretation
   union_concat_semiring :
     natural_order_semiring "{[]}" "(\<union>)" "(@@)" "{}" "(\<subseteq>)"
 proof
-  show
-    " \<And>a b c. a \<union> b \<union> c = a \<union> (b \<union> c)"
-    unfolding conc_def
-    by auto
-  show
-    " \<And>a b c. (a @@ b) @@ c = a @@ b @@ c "
-    unfolding conc_def
-    by (metis conc_assoc conc_def)
-  show
-    " \<And>a. {[]} @@ a = a "
-    by auto
-  show
-    " \<And>a. a @@ {[]} = a "
-    by auto
-  show
-    " \<And>a b. a \<union> b = b \<union> a "
-    by auto
-  show
-    " \<And>a. {} \<union> a = a "
-    by auto
-  show
-    " \<And>a. {} @@ a = {} "
-    by auto
-  show
-    " \<And>a. a @@ {} = {} "
-    by auto
-  show
-    " \<And>a b c. (a \<union> b) @@ c = a @@ c \<union> b @@ c "
-    by auto
-  show " \<And>a b c. a @@ (b \<union> c) = a @@ b \<union> a @@ c "
-    by auto
-  show " {} \<noteq> {[]} "
-    by auto
-  show " \<And>a. a \<union> a = a "
-    by auto
-  show " \<And>a b. (a \<union> b = b) = (a \<subseteq> b) "
-    by auto
-  show
-    " \<And>a b. a \<subseteq> b \<Longrightarrow> b \<subseteq> a \<Longrightarrow> a = b "
-    by auto
-  show
-    " \<And>a b c. a \<subseteq> b \<and> b \<subseteq> c \<Longrightarrow> a \<subseteq> c "
-    by auto
-  show
-    " \<And>a. a \<subseteq> a "
-    by auto
+  show " \<And>a b c. a \<union> b \<union> c = a \<union> (b \<union> c)"
+    unfolding conc_def by auto
+  show " \<And>a b c. (a @@ b) @@ c = a @@ b @@ c "
+    unfolding conc_def by (metis conc_assoc conc_def)
+  show " \<And>a. {[]} @@ a = a " by auto
+  show  " \<And>a. a @@ {[]} = a " by auto
+  show " \<And>a b. a \<union> b = b \<union> a " by auto
+  show " \<And>a. {} \<union> a = a " by auto
+  show " \<And>a. {} @@ a = {} " by auto
+  show " \<And>a. a @@ {} = {} " by auto
+  show " \<And>a b c. (a \<union> b) @@ c = a @@ c \<union> b @@ c " by auto
+  show " \<And>a b c. a @@ (b \<union> c) = a @@ b \<union> a @@ c " by auto
+  show " {} \<noteq> {[]} " by auto
+  show " \<And>a. a \<union> a = a " by auto
+  show " \<And>a b. (a \<union> b = b) = (a \<subseteq> b) " by auto
+  show " \<And>a b. a \<subseteq> b \<Longrightarrow> b \<subseteq> a \<Longrightarrow> a = b " by auto
+  show " \<And>a b c. a \<subseteq> b \<and> b \<subseteq> c \<Longrightarrow> a \<subseteq> c " by auto
+  show " \<And>a. a \<subseteq> a " by auto
 qed
 
 interpretation
@@ -158,11 +187,10 @@ proof
   show
     " \<And>a b c. (a \<union> b) \<parallel> c = a \<parallel> c \<union> b \<parallel> c "
     unfolding Shuffle_def
-    sorry
+    by (metis distribute_folded_classifier_disjunction)
   show
     " \<And>a b c. a \<parallel> (b \<union> c) = a \<parallel> b \<union> a \<parallel> c "
-    unfolding Shuffle_def
-    sorry
+    by (metis left_par_distribution)
 qed
 
 text "And here we define Quantales"
@@ -235,9 +263,7 @@ proof -
   have 
     symmetric_order :
     "(y || x ) \<sqsubseteq> (x || y) \<and> (x || y ) \<sqsubseteq> (y || x) "
-    by (metis
-          swapped_simplify_ones
-          simplify_ones)
+    by (metis swapped_simplify_ones simplify_ones)
   then show
     " (x || y) = (y || x) "
     by (metis parallel_quantale.leq_is_antisymmetric)
@@ -253,7 +279,7 @@ proof -
   then have
     simplify_pars :
     " x ; y  \<sqsubseteq> (x ; 1) || (1 ; y) "
-    by (metis one_is_par_neuter_left one_is_par_neuter_right )
+    by (simp)
   then show
     " x ; y  \<sqsubseteq> x || y "
     by (simp)
