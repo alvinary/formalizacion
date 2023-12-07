@@ -2,7 +2,32 @@ theory Concurrent_Kleene_Algebra
   imports Main HOL.Rings "Regular-Sets.Regular_Set"
 begin
 
-text "We define idempotent semirings and
+(*
+
+datatype choice = up | down
+
+fun largo :: "'a list => nat " where
+  "largo xs = (length xs)"
+
+fun factorial :: " nat => nat " where
+  " factorial 0 = 1 " | 
+  " factorial n = n * (factorial (n - 1)) "
+
+fun chooseOn :: " choice list \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> 'a list " where
+  " chooseOn [] _ _ = [] " |
+  " chooseOn _ [] _ = [] " |
+  " chooseOn _ _ [] = [] " |
+  " chooseOn (up#cs) (x#xs) (y#ys) = x#(chooseOn cs xs (y#ys)) " |
+  " chooseOn (down#cs) (x#xs) (y#ys) = y#(chooseOn cs (x#xs) ys) "
+
+fun kth_permutation :: " nat \<Rightarrow> 'a list \<Rightarrow> 'a list " where
+  " kth_permutation _ [] = [] " |
+  " kth_permutation k xs = "
+
+*)
+
+
+text " We define idempotent semirings and
       a natural ordering over their elements"
 
 locale idempotent_semiring =
@@ -44,6 +69,49 @@ lemma shuffle_is_commutative [simp] :
   " shuffles \<alpha> \<beta> = shuffles \<beta> \<alpha> "
   by (metis shuffles_commutes)
 
+lemma shuffles_have_sources :
+  " \<gamma> \<in> (A \<parallel> B) \<Longrightarrow> \<exists> \<alpha> \<beta>. \<gamma> \<in> shuffles \<alpha> \<beta> \<and> \<alpha> \<in> A \<and> \<beta> \<in> B "
+  unfolding Shuffle_def
+  by (auto)
+
+lemma nested_shuffles_have_sources :
+  " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma> \<eta>.
+                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
+                              \<eta> \<in> shuffles \<alpha> \<beta> \<and> 
+                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+proof -
+  have without_nesting :
+    " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<gamma> \<eta>.
+                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
+                              \<eta> \<in> Shuffle A B \<and> 
+                              \<gamma> \<in> C "
+    by (metis shuffles_have_sources)
+  have now_with_nesting :
+    " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma> \<eta>.
+                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
+                              \<eta> \<in> shuffles \<alpha> \<beta> \<and>
+                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+    by (metis without_nesting shuffles_have_sources)
+  show " \<delta> \<in> (A \<parallel> B) \<parallel> C \<Longrightarrow>
+              \<exists>\<alpha> \<beta> \<gamma> \<eta>.
+                \<delta> \<in> shuffles \<eta> \<gamma> \<and>
+                \<eta> \<in> shuffles \<alpha> \<beta> \<and>
+                \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+    by (metis now_with_nesting)
+qed
+
+lemma in_ab_c_implies_in_a_bc : 
+  " \<delta> \<in> ((A \<parallel> B) \<parallel> C) \<Longrightarrow> \<delta> \<in> (A \<parallel> (B \<parallel> C)) "
+  sorry
+(* proof -
+ 
+  assume hypothesis : "\<delta> \<in>  ((A \<parallel> B) \<parallel> C) "
+  have sources :  "\<exists> \<alpha> \<beta> \<gamma> \<eta>. 
+         \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
+         \<eta> \<in> shuffles \<alpha> \<beta> \<and> 
+         \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C"
+    by (metis hypothesis nested_shuffles_have_sources) *)
+
 lemma Shuffle_is_commutative [simp] :
   " A \<parallel> B = B \<parallel> A "
 proof -
@@ -64,6 +132,7 @@ qed
 
 lemma Shuffle_is_associative [simp] :
   " (A \<parallel> B) \<parallel> C = A \<parallel> (B \<parallel> C) "
+  unfolding Shuffle_def
   sorry
 
 lemma classifier_disjunction [simp] :
@@ -135,7 +204,7 @@ proof
   show " \<And>a b c. (a @@ b) @@ c = a @@ b @@ c "
     unfolding conc_def by (metis conc_assoc conc_def)
   show " \<And>a. {[]} @@ a = a " by auto
-  show  " \<And>a. a @@ {[]} = a " by auto
+  show " \<And>a. a @@ {[]} = a " by auto
   show " \<And>a b. a \<union> b = b \<union> a " by auto
   show " \<And>a. {} \<union> a = a " by auto
   show " \<And>a. {} @@ a = {} " by auto
@@ -161,7 +230,7 @@ proof
     " \<And>a. {} \<parallel> a = {} "
     by auto
   show
-    "  \<And>a. a \<parallel> {} = {} "
+    " \<And>a. a \<parallel> {} = {} "
     by auto
   show
     " \<And>a. a \<union> a = a "
@@ -182,7 +251,7 @@ proof
     " \<And>a b c. a \<subseteq> b \<and> b \<subseteq> c \<Longrightarrow> a \<subseteq> c "
     by auto
   show
-    "  \<And>a. a \<subseteq> a "
+    " \<And>a. a \<subseteq> a "
     by auto
   show
     " \<And>a b c. (a \<union> b) \<parallel> c = a \<parallel> c \<union> b \<parallel> c "
@@ -335,7 +404,7 @@ qed
 interpretation union_shuffle_quantale :
   quantale "{[]}" "(\<union>)" "(\<parallel>)" "empty" "(\<subseteq>)" "\<Union>"
 proof
-  show " \<And> a A. a \<parallel> \<Union> A =  \<Union> {a \<parallel> x |x. x \<in> A} "
+  show " \<And> \<alpha> A. \<alpha> \<parallel> \<Union> A =  \<Union> {\<alpha> \<parallel> \<beta> |\<beta>. \<beta> \<in> A} "
     unfolding Shuffle_def
     by auto
   show "  \<And> x A. (\<And>y. y \<in> A \<Longrightarrow> y \<subseteq> x) \<Longrightarrow> \<Union> A \<subseteq> x "
