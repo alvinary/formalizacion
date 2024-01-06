@@ -3,7 +3,7 @@ theory Concurrent_Kleene_Algebra
 begin
 
 text " We define idempotent semirings and
-      a natural ordering over their elements"
+      a natural ordering over their elements "
 
 locale idempotent_semiring =
   semiring_1 one times plus zero for
@@ -44,48 +44,15 @@ lemma shuffle_is_commutative [simp] :
   " shuffles \<alpha> \<beta> = shuffles \<beta> \<alpha> "
   by (metis shuffles_commutes)
 
-lemma shuffles_have_sources :
-  " \<gamma> \<in> (A \<parallel> B) \<Longrightarrow> \<exists> \<alpha> \<beta>. \<gamma> \<in> shuffles \<alpha> \<beta> \<and> \<alpha> \<in> A \<and> \<beta> \<in> B "
-  unfolding Shuffle_def
-  by (auto)
-
-lemma nested_shuffles_have_sources :
-  " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma> \<eta>.
-                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
-                              \<eta> \<in> shuffles \<alpha> \<beta> \<and> 
-                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
-proof -
-  have without_nesting :
-    " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<gamma> \<eta>.
-                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
-                              \<eta> \<in> Shuffle A B \<and> 
-                              \<gamma> \<in> C "
-    by (metis shuffles_have_sources)
-  have now_with_nesting :
-    " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma> \<eta>.
-                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
-                              \<eta> \<in> shuffles \<alpha> \<beta> \<and>
-                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
-    by (metis without_nesting shuffles_have_sources)
-  show " \<delta> \<in> (A \<parallel> B) \<parallel> C \<Longrightarrow>
-              \<exists>\<alpha> \<beta> \<gamma> \<eta>.
-                \<delta> \<in> shuffles \<eta> \<gamma> \<and>
-                \<eta> \<in> shuffles \<alpha> \<beta> \<and>
-                \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
-    by (metis now_with_nesting)
-qed
-
-
 lemma Shuffle_is_commutative [simp] :
   " A \<parallel> B = B \<parallel> A "
 proof -
-  have A_par_B_is_def :
-    " A \<parallel> B = \<Union> {shuffles \<alpha> \<beta> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
+  have " A \<parallel> B = \<Union> {shuffles \<alpha> \<beta> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
     unfolding Shuffle_def
     by auto
-  have swap_alpha_and_beta :
+  then have swap_alpha_and_beta :
     " A \<parallel> B = \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
-    by (simp add:A_par_B_is_def add:shuffle_is_commutative)
+    by (simp)
   have B_par_A_is_def :
     " B \<parallel> A = \<Union> {shuffles \<beta> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B  } "
     unfolding Shuffle_def
@@ -131,15 +98,11 @@ proof -
     "  { x | x. \<exists> xs ys. xs \<in> B \<and> ys \<in> C \<and> x \<in> shuffles xs ys } = 
          \<Union> { shuffles x y | x y. x \<in> B \<and> y \<in> C } "
     by auto
-  have and_what_is_the_rest_then :
+  show
     " \<Union> { shuffles x y | x y. (x \<in> A \<union> B) \<and> (y \<in> C) } = 
       \<Union> { shuffles x y | x y. x \<in> A \<and> y \<in> C } \<union>
       \<Union> { shuffles x y | x y. x \<in> B \<and> y \<in> C } "
     by (metis how_about_the_rest and_what_is_that)
-  show " \<Union> {shuffles x y |x y. x \<in> A \<union> B \<and> y \<in> C} =
-         \<Union> {shuffles x y |x y. x \<in> A \<and> y \<in> C} \<union>
-         \<Union> {shuffles x y |x y. x \<in> B \<and> y \<in> C} "
-    by (metis and_what_is_the_rest_then)
 qed
 
 lemma left_par_distribution [simp] :
@@ -154,12 +117,76 @@ proof -
     by (simp)
 qed
 
-lemma shuffle_is_shuffle_of_singletons [simp] : 
+lemma Shuffles_of_singletons_are_shuffles [simp] :
+  " {\<alpha>} \<parallel> {\<beta>} = shuffles \<alpha> \<beta> "
+  unfolding Shuffle_def
+  by auto
+
+lemma aux :
+  " \<alpha> \<in> Shuffle A B \<and> \<gamma> \<in> Shuffle {\<alpha>} {\<beta>} \<Longrightarrow> \<gamma> \<in> (Shuffle (Shuffle A B) {\<beta>}) "
+  unfolding Shuffle_def by blast
+
+lemma shuffles_have_sources :
+  " \<gamma> \<in> (A \<parallel> B) \<Longrightarrow> \<exists> \<alpha> \<beta>. \<gamma> \<in> shuffles \<alpha> \<beta> \<and> \<alpha> \<in> A \<and> \<beta> \<in> B "
+  unfolding Shuffle_def
+  by (auto)
+
+lemma nested_shuffles_have_sources :
+  " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma> \<eta>.
+                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
+                              \<eta> \<in> shuffles \<alpha> \<beta> \<and> 
+                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+proof -
+  have without_nesting :
+    " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<gamma> \<eta>.
+                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
+                              \<eta> \<in> Shuffle A B \<and> 
+                              \<gamma> \<in> C "
+    by (metis shuffles_have_sources)
+  show
+    " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma> \<eta>.
+                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
+                              \<eta> \<in> shuffles \<alpha> \<beta> \<and>
+                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+    by (metis without_nesting shuffles_have_sources)
+qed
+
+lemma nested_shuffles_have_singleton_sources :
+  " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma>.
+                              \<delta> \<in> ({\<alpha>} \<parallel> {\<beta>}) \<parallel> {\<gamma>} \<and> 
+                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+proof -
+  (*
+    have with eta
+    eta has beta and gamma, by shuffles have sources (the binary one)
+    have by {alpha} \<parallel> {beta} = alpha \<parallel> beta
+
+  *)
+  have " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma> \<eta>.
+                              \<delta> \<in> shuffles \<eta> \<gamma> \<and> 
+                              \<eta> \<in> shuffles \<alpha> \<beta> \<and>
+                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+    by (metis nested_shuffles_have_sources)
+  then have " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma> \<eta>.
+                              \<delta> \<in> {\<eta>} \<parallel> {\<gamma>} \<and> 
+                              \<eta> \<in> {\<alpha>} \<parallel> {\<beta>} \<and>
+                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+    by (auto)
+  then show  " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma>.
+                              \<delta> \<in> ({\<alpha>} \<parallel> {\<beta>}) \<parallel> {\<gamma>} \<and> 
+                              \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
+    by (metis aux)
+qed
+
+(* Esto es impoggtante *)
+
+(* shuffle is shuffle of singletons *)
+lemma shuffles_are_shuffles_of_singletons [simp] :
   " A \<parallel> B = \<Union> { {\<alpha>} \<parallel> {\<beta>} | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
   unfolding Shuffle_def
   by auto
 
-lemma nonempty_shuffles_expansion :
+lemma unfolded_shuffle_of_nonempty_strings :
   " shuffles (x # xs) (y # ys) = (#) x ` shuffles xs (y # ys) \<union> (#) y ` shuffles (x # xs) ys "
   by auto
 
@@ -167,22 +194,18 @@ lemma nonempty_shuffles [simp] :
   " {a#\<alpha>} \<parallel> {b#\<beta>} = shuffles (a#\<alpha>) (b#\<beta>) "
   unfolding Shuffle_def by auto
 
-lemma singleton_simple [simp] :
-  " {\<alpha>} \<parallel> {\<beta>} = shuffles \<alpha> \<beta> "
-  unfolding Shuffle_def by auto
-
-lemma shuffle_of_singletons_raw :
+lemma ugly_unfolded_shuffle_of_singletons :
   " {a#\<alpha>} \<parallel> {b#\<beta>} = (#) a ` (shuffles \<alpha> (b#\<beta>)) \<union> (#) b ` (shuffles (a#\<alpha>) \<beta>) "
-  by (metis nonempty_shuffles nonempty_shuffles_expansion)
+  by (metis nonempty_shuffles unfolded_shuffle_of_nonempty_strings)
 
 lemma concat_aux [simp] :
   " (#) a ` (A) = {[a]} @@ A "
   unfolding conc_def
   by auto
 
-lemma shuffle_of_singletons :
+lemma unfolded_shuffle_of_singletons :
   " {a#\<alpha>} \<parallel> {b#\<beta>} = {[a]} @@ (shuffles \<alpha> (b#\<beta>)) \<union> {[b]} @@ (shuffles (a#\<alpha>) \<beta>) "
-  by (metis shuffle_of_singletons_raw concat_aux)
+  by (metis ugly_unfolded_shuffle_of_singletons concat_aux)
 
 lemma singleton_as_concat [simp] :
   " {a#\<alpha>} = {[a]} @@ {\<alpha>} "
@@ -194,15 +217,20 @@ lemma shuffle_of_heads_as_union :
       {[a]} @@ (A  \<parallel> {[b]} @@ B ) \<union> 
       {[b]} @@ ({[a]} @@ A  \<parallel> B)"
   sorry
-  
-lemma Shuffle_singleton_shuffle_is_commutative :
+
+(* Si alguno de todos es [], tooodo el shuffle es [] *)
+(* Si ninguno es [], todos son de esta forma *)
+
+(* Y el shuffle de no singletons es la unión de singleton shuffles *)
+
+lemma shuffle_of_singletons_is_associative :
   " {a#\<alpha>} \<parallel> ({b#\<beta>}  \<parallel> {c#\<gamma>}) =  ({a#\<alpha>} \<parallel> {b#\<beta>}) \<parallel> {c#\<gamma>} "
 proof -
   have lhs_expansion :
     " {a#\<alpha>} \<parallel> ({b#\<beta>}  \<parallel> {c#\<gamma>}) =
         {a#\<alpha>} \<parallel> ( {[b]} @@ (shuffles \<beta> (c#\<gamma>)) \<union> 
         {[c]} @@ (shuffles (b#\<beta>) \<gamma>)) "
-    by (metis shuffle_of_singletons)
+    by (metis unfolded_shuffle_of_singletons)
   then have lhs_distributed :
      " {a#\<alpha>} \<parallel> ({b#\<beta>}  \<parallel> {c#\<gamma>}) =
           {a#\<alpha>} \<parallel> ({[b]} @@ (shuffles \<beta> (c#\<gamma>))) \<union> 
@@ -212,7 +240,7 @@ proof -
       " {a#\<alpha>} \<parallel> ({b#\<beta>}  \<parallel> {c#\<gamma>}) =
           {a#\<alpha>} \<parallel> ({[b]} @@ ({\<beta>} \<parallel> {c#\<gamma>})) \<union> 
           {a#\<alpha>} \<parallel> ({[c]} @@ ({b#\<beta>} \<parallel> {\<gamma>})) "
-    by (metis singleton_simple)
+    by (metis Shuffles_of_singletons_are_shuffles)
   then have lhs_distributed_conc_singletons :
       " {a#\<alpha>} \<parallel> ({b#\<beta>}  \<parallel> {c#\<gamma>}) =
           ({[a]}@@{\<alpha>}) \<parallel> ({[b]} @@ ({\<beta>} \<parallel> {c#\<gamma>})) \<union> 
@@ -228,6 +256,15 @@ proof -
   show " {a#\<alpha>} \<parallel> ({b#\<beta>}  \<parallel> {c#\<gamma>}) =  ({a#\<alpha>} \<parallel> {b#\<beta>}) \<parallel> {c#\<gamma>} "
     sorry
 qed
+
+lemma Shuffle_is_associative :
+  " (A \<parallel> B) \<parallel> C = A \<parallel> (B \<parallel> C) "
+  (* 
+    * "shuffles have singleton sources"
+    * And the shuffle of singletons is associative
+    * So every string in LHS is a string in RHS, and viceversa
+    * Hence both sets are equal
+  *)
 
 (*
   then have lhs_distributed_expansion :
@@ -257,7 +294,7 @@ lemma forward_sources :
 lemma "\<phi> \<in> (A \<parallel> (B \<parallel> C)) \<Longrightarrow> 
         \<exists> \<alpha> \<beta> \<gamma>.  \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C \<Longrightarrow> 
           \<exists> \<delta>. \<delta> \<in> (shuffles \<beta> \<gamma>) \<and> \<phi> \<in> shuffles \<delta> \<gamma> "
-  unfolding Shuffle_def  
+  unfolding Shuffle_def
 proof
 *)
 
