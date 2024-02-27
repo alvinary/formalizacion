@@ -1,9 +1,25 @@
 theory Concurrent_Kleene_Algebra
-  imports Main HOL.Rings "Regular-Sets.Regular_Set"
+  imports Main HOL.Rings "Regular-Sets.Regular_Set" HOL.List
 begin
 
-text \<open> Here we prove shuffle languages are concurrent
-       Kleene algebras.  \<close>
+text \<open> Here we prove shuffle languages are concurrent Kleene algebras. \<close>
+
+text \<open> Kleene algebras were early models of program semantics. They are similar to
+       dynamic and temporal logics, in that they model any  given program as a set 
+       of execution paths. \<close>
+
+text \<open> Unlike dynamic logics, which model properties and execution paths separately
+       (and in which both programs and properties are syntactically and semantically
+       very different objects), Kleene algebras do not distinguish between facts or
+       propositions and programs. \<close>
+
+text \<open> Sequential and concurrent composition - semirings or dioids (some authors
+       use the term dioid, some others...) \<close>
+
+text \<open> Sequential and concurrent composition \<close>
+
+text \<open> Concurrent Kleene algebras have two notable models: sets of words and sets of
+       traces. \<close>
 
 text \<open> We begin by defining the familiar notation for
        the empty string, which in Isabelle is the empty list. \<close>
@@ -80,15 +96,15 @@ begin
         by (metis induced_natural_order)
     qed
 
-lemma leq_is_antisymmetric : " a \<preceq> b \<and> b \<preceq> a \<Longrightarrow> a = b "
-  using leq_is_transitive induced_natural_order
-  proof -
-    have " a \<preceq> b \<and> b \<preceq> a \<Longrightarrow> a \<oplus> b = b \<and> b \<oplus> a = a " 
-      by (metis induced_natural_order)
-    then have " a \<preceq> b \<and> b \<preceq> a \<Longrightarrow> a \<oplus> b = b \<and> a \<oplus> b = a "
-      by (metis plus_is_commutative)
-    then show " a \<preceq> b \<and> b \<preceq> a \<Longrightarrow> a = b " by auto
-  qed  
+  lemma leq_is_antisymmetric : " a \<preceq> b \<and> b \<preceq> a \<Longrightarrow> a = b "
+    using leq_is_transitive induced_natural_order
+    proof -
+      have " a \<preceq> b \<and> b \<preceq> a \<Longrightarrow> a \<oplus> b = b \<and> b \<oplus> a = a " 
+        by (metis induced_natural_order)
+      then have " a \<preceq> b \<and> b \<preceq> a \<Longrightarrow> a \<oplus> b = b \<and> a \<oplus> b = a "
+        by (metis plus_is_commutative)
+      then show " a \<preceq> b \<and> b \<preceq> a \<Longrightarrow> a = b " by auto
+    qed  
     
 end
 
@@ -114,7 +130,7 @@ proof -
   have " A \<parallel> B = \<Union> { \<alpha> \<diamondop> \<beta> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
     unfolding Shuffle_def
     by auto
-  then have swap_alpha_and_beta :
+  then have commute_alpha_and_beta :
     " A \<parallel> B = \<Union> { \<beta> \<diamondop> \<alpha> | \<alpha> \<beta> . \<alpha> \<in> A \<and> \<beta> \<in> B } "
     by (simp)
   have B_par_A_is_def :
@@ -122,17 +138,11 @@ proof -
     unfolding Shuffle_def
     by blast
   show " A \<parallel> B = B \<parallel> A "
-    by (simp add:swap_alpha_and_beta add:B_par_A_is_def)
+    by (simp add:commute_alpha_and_beta add:B_par_A_is_def)
 qed
 
 lemma classifier_disjunction :
   " { \<alpha> | \<alpha>. \<alpha> \<in> A \<or> \<alpha> \<in> B} = { \<alpha> | \<alpha>. \<alpha> \<in> A} \<union> { \<alpha> | \<alpha>. \<alpha> \<in> B} "
-  by auto
-
-lemma distribute_classifier_disjunction :
-  " { \<alpha> \<diamondop> \<beta> | \<alpha> \<beta>. (\<alpha> \<in> A \<union> B) \<and> (\<beta> \<in> C) } = 
-    { \<alpha> \<diamondop> \<beta> | \<alpha> \<beta>. (\<alpha> \<in> A) \<and> (\<beta> \<in> C) } \<union> 
-    { \<alpha> \<diamondop> \<beta> | \<alpha> \<beta>. (\<alpha> \<in> B) \<and> (\<beta> \<in> C) }"
   by auto
 
 lemma unfolded_set_union :
@@ -274,19 +284,19 @@ lemma empty_is_shuffle_neuter :
   " \<alpha> \<diamondop> \<epsilon> = {\<alpha>} "
   unfolding Shuffle_def \<epsilon>_def by auto
 
-lemma superaux : " A \<parallel> (B \<parallel> C)  = \<Union> { {xs} \<parallel> {ys} | xs ys.
+lemma singleton_shuffle_union : " A \<parallel> (B \<parallel> C)  = \<Union> { {xs} \<parallel> {ys} | xs ys.
             xs \<in> A \<and>
             ys \<in> \<Union> { {xs} \<parallel> {ys} | xs ys. xs \<in> B \<and> ys \<in> C } } "
   unfolding Shuffle_def
   by auto
 
-lemma superaux_2 :
+lemma singleton_shuffle_union_elem :
   " \<delta> \<in>  \<Union> { {xs} \<parallel> {ys} | xs ys. xs \<in> A \<and> ys \<in> \<Union> { {xs} \<parallel> {ys} | xs ys. xs \<in> B \<and> ys \<in> C } }  \<Longrightarrow> 
               \<delta> \<in> A \<parallel> (B \<parallel> C)  "
   unfolding Shuffle_def
   by auto
 
-lemma singleton_sources_are_in_shuffles :
+lemma singleton_sources_are_in_shuffles_right :
   " \<delta> \<in> {\<alpha>} \<parallel> ({\<beta>} \<parallel> {\<gamma>}) \<and> \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C \<Longrightarrow> \<delta> \<in> A \<parallel> (B \<parallel> C) "
   unfolding Shuffle_def
   by fast
@@ -296,9 +306,247 @@ lemma singleton_sources_are_in_shuffles_left :
   unfolding Shuffle_def
   by fast
 
+(* Indexing permutations *)
+
+datatype choice = L | R
+datatype mixed_choice = LL | LR | RR
+
+fun chooseOn :: " choice list \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> 'a list  " where
+"chooseOn [] _ _ = []" |
+"chooseOn _ [] ys = ys" |
+"chooseOn _ xs [] = xs" |
+"chooseOn (L#ls) (x#xs) ys = x#(chooseOn ls xs ys)" |
+"chooseOn (R#ls) xs (y#ys) = y#(chooseOn ls xs ys)"
+
+fun mixedChooseOn :: " mixed_choice list \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> 'a list " where
+" mixedChooseOn [] _ _ _ = [] " |
+" mixedChooseOn (LL#cs) (x#xs) ys zs = x#(mixedChooseOn cs xs ys zs) " |
+" mixedChooseOn (LR#cs) xs (y#ys) zs = y#(mixedChooseOn cs xs ys zs) " |
+" mixedChooseOn (RR#cs) xs ys (z#zs) = z#(mixedChooseOn cs xs ys zs) " |
+" mixedChooseOn _ _ _ _ = [] "
+
+fun factorial :: "nat \<Rightarrow> nat" where
+"factorial 0 = 1 " |
+"factorial (Suc n) = (Suc n) * (factorial n)"
+
+fun previous_factorial :: "'a list \<Rightarrow> nat" where
+" previous_factorial [] = 1 " |
+" previous_factorial (x#xs) = (factorial (length xs)) "
+
+fun element_index :: "nat \<Rightarrow> 'a list \<Rightarrow> nat " where
+" element_index n xs = (n div (previous_factorial xs)) "
+
+fun insert_in_between :: " nat \<Rightarrow> 'a \<Rightarrow> 'a list \<Rightarrow> 'a list " where
+" insert_in_between n x xs = take n xs @ [x] @ drop n xs "
+
+fun nth_permutation :: " nat \<Rightarrow> 'a list \<Rightarrow> 'a list " where
+" nth_permutation n [] = [] " |
+" nth_permutation n (x#xs) =
+      insert_in_between
+        (element_index n (x#xs))
+         x
+        (nth_permutation
+              (n mod (previous_factorial (x#xs)))
+               xs) "
+
+fun base_left :: " 'a list \<Rightarrow> choice list " where
+" base_left [] = [] " |
+" base_left (a#\<alpha>) = L#(base_left \<alpha>) "
+
+fun base_right :: " 'a list \<Rightarrow> choice list " where
+" base_right [] = [] " |
+" base_right (a#\<alpha>) = R#(base_right \<alpha>) "
+
+fun base_choice :: " 'a list \<Rightarrow> 'a list \<Rightarrow> choice list " where
+" base_choice \<alpha> \<beta> = base_left \<alpha> @ base_right \<beta> "
+
+fun nth_choice :: " nat \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> choice list " where
+" nth_choice n \<alpha> \<beta> = nth_permutation n (base_choice \<alpha> \<beta>) "
+
+(*  *)
+
+fun count_left :: " choice list \<Rightarrow> nat " where
+" count_left [] = 0 " |
+" count_left (L#cs) = 1 + count_left cs " | 
+" count_left (R#cs) = count_left cs "
+
+fun count_right :: " choice list \<Rightarrow> nat " where
+" count_right [] = 0 " |
+" count_right (L#cs) = count_right cs " | 
+" count_right (R#cs) = 1 + count_right cs "
+
+lemma base_left_length :
+  fixes \<alpha>
+  shows " count_left (base_left \<alpha>) = length \<alpha> "
+proof (induct \<alpha>)
+  show " count_left (base_left []) = length [] "
+    by simp
+  show " \<And>a \<alpha>. count_left (base_left \<alpha>) =
+           length \<alpha> \<Longrightarrow>
+           count_left
+            (base_left (a # \<alpha>)) =
+           length (a # \<alpha>) "
+    by auto
+qed
+
+lemma base_right_length :
+  fixes \<alpha>
+  shows " count_right (base_right \<alpha>) = length \<alpha> "
+proof (induct \<alpha>)
+  show " count_right (base_right []) = length [] "
+    by simp
+  show " \<And>a \<alpha>. count_right (base_right \<alpha>) =
+           length \<alpha> \<Longrightarrow>
+           count_right
+            (base_right (a # \<alpha>)) =
+           length (a # \<alpha>) "
+    by auto
+qed
+
+lemma append_left_left_count :
+  " (count_left \<alpha>) = n \<Longrightarrow> count_left (L#\<alpha>) = 1 + n "
+  by auto
+
+lemma append_right_left_count :
+  " (count_left \<alpha>) = n \<Longrightarrow> (count_left (R#\<alpha>)) = n "
+  by auto
+
+lemma append_left_right_count :
+  " (count_right \<alpha>) = n \<Longrightarrow> count_right (L#\<alpha>) = n"
+  by auto
+
+lemma append_right_right_count :
+  " (count_right \<alpha>) = n \<Longrightarrow> count_right (R#\<alpha>) = 1 + n"
+  by auto
+
+fun match :: " choice list \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> bool " where
+  " match [] [] [] = True " |
+  " match [] (a#\<alpha>) _ = False " |
+  " match [] _ (b#\<beta>) = False " |
+  " match (L#cs) [] _ = False " |
+  " match (R#cs) _ [] = False " |
+  " match (L#cs) (a#\<alpha>) \<beta> = match cs \<alpha> \<beta> " |
+  " match (R#cs) \<alpha> (b#\<beta>) = match cs \<alpha> \<beta> "
+
+lemma empty_match :
+  " match [] \<alpha> \<beta> \<Longrightarrow> \<alpha> = [] \<and> \<beta> = []"
+  using match.elims(2) by auto
+
+lemma choose_on_append_left :
+  " chooseOn cs \<alpha> \<beta> \<in> \<alpha> \<diamondop> \<beta> \<Longrightarrow> 
+    chooseOn (L#cs) (a#\<alpha>) \<beta> \<in> (a#\<alpha>) \<diamondop> \<beta> "
+  by (metis 
+        (no_types, opaque_lifting)
+        Cons_in_shuffles_leftI  
+        \<epsilon>_def
+        chooseOn.simps(3)
+        chooseOn.simps(4)
+        empty_is_shuffle_neuter
+        list.exhaust singletonI)
+
+lemma choose_on_append_right :
+  " chooseOn cs \<alpha> \<beta> \<in> \<alpha> \<diamondop> \<beta> \<Longrightarrow> 
+    chooseOn (R#cs) \<alpha> (b#\<beta>) \<in> \<alpha> \<diamondop> (b#\<beta>) "
+  by (metis 
+        Cons_in_shuffles_rightI
+        chooseOn.simps(2)
+        chooseOn.simps(5)
+        neq_Nil_conv
+        shuffles.simps(1)
+        singletonI)
+
+lemma choose_on_plus_cases_l :
+  " count_left cs = length \<alpha> \<Longrightarrow> count_left (L#cs) = length (a # \<alpha>)"
+  by auto
+
+lemma choose_on_plus_cases_r :
+  " count_right cs = length \<alpha> \<Longrightarrow> count_right (R#cs) = length (a # \<alpha>)"
+  by auto
+
+lemma matching_choices_in_shuffles :
+ " count_left cs = length \<alpha> \<and> count_right cs = length \<beta> \<Longrightarrow> chooseOn cs \<alpha> \<beta> \<in> \<alpha> \<diamondop> \<beta> "
+  sorry
+(*
+proof -
+  have " count_left [] = length [] 
+       \<and> count_right [] = length []
+     \<Longrightarrow> chooseOn [] [] [] \<in> [] \<diamondop> [] "
+    by simp
+  have "    (count_left cs) = (length \<alpha>)
+          \<and> (count_right cs) = (length \<beta>) 
+          \<and> chooseOn cs \<alpha> \<beta> \<in> \<alpha> \<diamondop> \<beta> \<Longrightarrow>
+            chooseOn (L#cs) (a#\<alpha>) \<beta> \<in> (a#\<alpha>) \<diamondop> \<beta> 
+          \<and> count_left (L#cs) = length (a#\<alpha>)
+          \<and> count_right (L#cs) = length \<beta>  "
+    using choose_on_append_left by fastforce
+   have "    (count_left cs) = (length \<alpha>)
+          \<and> (count_right cs) = (length \<beta>) 
+          \<and> chooseOn cs \<alpha> \<beta> \<in> \<alpha> \<diamondop> \<beta> \<Longrightarrow>
+            chooseOn (R#cs) \<alpha> (b#\<beta>) \<in> \<alpha> \<diamondop> (b#\<beta>) 
+          \<and> count_left (R#cs) = length \<alpha>
+          \<and> count_right (R#cs) = length (b#\<beta>)  "
+     using choose_on_append_right by fastforce
+*)
+    
+
+lemma matching_choices_in_singleton_shuffles :
+ " count_left cs = length \<alpha> \<and> count_right cs = length \<beta> \<Longrightarrow> chooseOn cs \<alpha> \<beta> \<in> {\<alpha>} \<parallel> {\<beta>} "
+  unfolding Shuffle_def
+  using matching_choices_in_shuffles
+  by auto
+
+lemma matching_choices_in_nested_shuffles :
+  " count_left cs = length \<alpha> + length \<beta> \<and>
+        count_right cs = length \<gamma> \<and> 
+        count_left ds = length \<alpha> \<and>
+        count_right ds = length \<beta> \<Longrightarrow>
+        chooseOn cs (chooseOn ds \<alpha> \<beta>) \<gamma> \<in> ({\<alpha>} \<parallel> {\<beta>}) \<parallel>  {\<gamma>} "
+proof -
+  have " count_left ds = length \<alpha> \<and>
+           count_right ds = length \<beta> \<and>
+           count_left cs = length \<alpha> + length \<beta> \<and>
+           count_right cs = length \<gamma> \<Longrightarrow> (chooseOn ds \<alpha> \<beta>) \<in> ({\<alpha>} \<parallel> {\<beta>}) " 
+    using matching_choices_in_singleton_shuffles
+    by auto
+  then have "count_left ds = length \<alpha> \<and>
+           count_right ds = length \<beta> \<and>
+           count_left cs = length \<alpha> + length \<beta> \<and>
+           count_right cs = length \<gamma> \<Longrightarrow> 
+           chooseOn cs (chooseOn ds \<alpha> \<beta>) \<gamma> \<in> ({\<alpha>} \<parallel> {\<beta>}) \<parallel>  {\<gamma>} "
+    using
+        aux 
+        length_shuffles
+        matching_choices_in_shuffles
+        matching_choices_in_singleton_shuffles
+    by metis
+  then show " count_left cs =
+    length \<alpha> + length \<beta> \<and>
+    count_right cs = length \<gamma> \<and>
+    count_left ds = length \<alpha> \<and>
+    count_right ds = length \<beta> \<Longrightarrow>
+    chooseOn cs (chooseOn ds \<alpha> \<beta>) \<gamma>
+    \<in> ({\<alpha>} \<parallel> {\<beta>}) \<parallel> {\<gamma>} "
+    by auto
+qed
+
+(* End of indexing lemmas *)
+
+lemma associativity_base :
+  "  {[]} \<parallel> ({[]}  \<parallel> {[]}) =  ({[]} \<parallel> {[]}) \<parallel> {[]} "
+  by simp
+
+(*
+lemma associativity_rec :
+  "  {a#as} \<parallel> ({b#bs}  \<parallel> {c#cs}) =  ({a#as} \<parallel> {b#bs}) \<parallel> {c#cs} "
+proof -
+  have " {b#bs}  \<parallel> {c#cs} = {[b]};({bs} \<parallel> {c#cs}) \<union> {[c]};({b#bs} \<parallel> {cs}) "
+    by (metis Shuffles_of_singletons_are_shuffles unfolded_shuffle_of_singletons)   
+  then have " {a#as} \<parallel> ({b#bs}  \<parallel> {c#cs}) = 
+                      {a#as} \<parallel> ({[b]};({bs} \<parallel> {c#cs}) \<union> {[c]};({b#bs} \<parallel> {cs})) "
+*)
+
 lemma shuffle_of_singletons_is_associative :
   " {\<alpha>} \<parallel> ({\<beta>}  \<parallel> {\<gamma>}) =  ({\<alpha>} \<parallel> {\<beta>}) \<parallel> {\<gamma>} "
-  unfolding Shuffle_def
   sorry
 
 lemma subsets_lemma : " (\<And>x . x \<in> A \<Longrightarrow> x \<in> B) \<Longrightarrow> A \<subseteq> B "
@@ -314,18 +562,18 @@ proof
                               \<delta> \<in> ({\<alpha>} \<parallel> {\<beta>}) \<parallel> {\<gamma>} \<and> 
                               \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
     by (metis nested_shuffles_have_singleton_sources)
-  then have haha :
+  then have
     " \<delta> \<in> ((A \<parallel> B) \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma>.
                               \<delta> \<in> {\<alpha>} \<parallel> ({\<beta>} \<parallel> {\<gamma>}) \<and> 
                               \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
     by (metis shuffle_of_singletons_is_associative)
   then have
     " \<delta> \<in> (A \<parallel> B) \<parallel> C  \<Longrightarrow> \<delta> \<in> A \<parallel> (B \<parallel> C) "
-    by (meson singleton_sources_are_in_shuffles)
-  then have left_in_right : " (A \<parallel> B) \<parallel> C \<subseteq>  A \<parallel> (B \<parallel> C) " 
+    by (meson singleton_sources_are_in_shuffles_right)
+  then show " (A \<parallel> B) \<parallel> C \<subseteq>  A \<parallel> (B \<parallel> C) " 
     using nested_shuffles_have_singleton_sources 
           shuffle_of_singletons_is_associative
-          singleton_sources_are_in_shuffles
+          singleton_sources_are_in_shuffles_right
     by blast
   have " \<delta> \<in> A \<parallel> (B \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma>.
                               \<delta> \<in> {\<alpha>} \<parallel> ({\<beta>} \<parallel> {\<gamma>}) \<and> 
@@ -333,7 +581,7 @@ proof
     using
       nested_shuffles_have_singleton_sources
     by fastforce
-  then have haha :
+  then have
     " \<delta> \<in> A \<parallel> (B \<parallel> C)  \<Longrightarrow> \<exists> \<alpha> \<beta> \<gamma>.
                               \<delta> \<in> ({\<alpha>} \<parallel> {\<beta>}) \<parallel> {\<gamma>} \<and> 
                               \<alpha> \<in> A \<and> \<beta> \<in> B \<and> \<gamma> \<in> C "
@@ -341,20 +589,15 @@ proof
   then have
     " \<delta> \<in> A \<parallel> (B \<parallel> C)  \<Longrightarrow> \<delta> \<in> (A \<parallel> B) \<parallel> C "
      by (meson singleton_sources_are_in_shuffles_left)
-   then have right_in_left : 
+   then show right_in_left : 
       " A \<parallel> (B \<parallel> C) \<subseteq>  (A \<parallel> B) \<parallel> C "
      by (smt 
           (verit, ccfv_threshold)
             Shuffle_is_commutative
             nested_shuffles_have_singleton_sources
             shuffle_of_singletons_is_associative
-            singleton_sources_are_in_shuffles
+            singleton_sources_are_in_shuffles_right
             subsets_lemma)
-  
-   show " (A \<parallel> B) \<parallel> C \<subseteq> A \<parallel> (B \<parallel> C) "
-     by (metis left_in_right)
-   show " A \<parallel> (B \<parallel> C) \<subseteq> (A \<parallel> B) \<parallel> C "
-     by (metis right_in_left)
 qed
 
 interpretation
@@ -405,11 +648,10 @@ proof
     unfolding \<epsilon>_def by auto
   show
     " \<And>a b c. (a \<union> b) \<parallel> c = a \<parallel> c \<union> b \<parallel> c "
-    unfolding Shuffle_def
-    by (metis distribute_folded_classifier_disjunction)
+    unfolding Shuffle_def by (metis distribute_folded_classifier_disjunction)
   show
     " \<And> A B C. A \<parallel> (B \<union> C) = A \<parallel> B \<union> A \<parallel> C "
-    by (metis left_par_distribution)
+    using left_par_distribution by auto
 qed
 
 text "And here we define Quantales"
@@ -471,34 +713,34 @@ proof -
     " (x || y ) \<sqsubseteq> (y || x) "
     by (simp)
   then have " (y || x) ; (1 || 1) \<sqsubseteq> (x ; 1) || (y ; 1) "
-    by (metis exchange_law)
+    using exchange_law by blast
   then have swapped_simplify_ones :
     " (y || x ) \<sqsubseteq> (x || y) "
     by (simp)
   have  "(y || x ) \<sqsubseteq> (x || y) \<and> (x || y ) \<sqsubseteq> (y || x) "
-    by (metis swapped_simplify_ones simplify_ones)
+    using swapped_simplify_ones simplify_ones by auto
   then show " (x || y) = (y || x) "
-    by (metis parallel_quantale.leq_is_antisymmetric)
+    using parallel_quantale.leq_is_antisymmetric by auto
 qed
 
 lemma par_contains_seq :
   " x ; y \<sqsubseteq> x || y "
 proof -
   have " (1 || x) ; (1 || y) \<sqsubseteq> (x ; 1) || (1 ; y) "
-    by (metis exchange_law)
+    using exchange_law by blast
   then have " x ; y  \<sqsubseteq> (x ; 1) || (1 ; y) "
-    by (simp)
+    by simp
   then show " x ; y  \<sqsubseteq> x || y "
-    by (simp)
+    by simp
 qed
 
 lemma alternative_exchange :
-  "(x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w) "
+  " (x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w) "
 proof -
-  have "(y || x) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w)"
-    by (metis exchange_law)
-  then show "(x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w)"
-    by (metis par_is_commutative)
+  have " (y || x) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w) "
+    using exchange_law by auto
+  then show " (x || y) ; (z || w) \<sqsubseteq> (x ; z) || (y ; w) "
+    using par_is_commutative by auto
 qed
 
 lemma par_extraction :
@@ -506,7 +748,7 @@ lemma par_extraction :
 proof -
   have partial_exchange :
     " (x || y) ; (1 || z) \<sqsubseteq> (x ; 1) || (y ; z) "
-    by (metis alternative_exchange)
+    using alternative_exchange by blast
   then show " (x || y) ; z \<sqsubseteq> x || (y ; z) "
     by simp
 qed
@@ -516,14 +758,14 @@ lemma seq_extraction :
 proof -
   have partial_alternative :
     " (x || y) ; (1 || z) \<sqsubseteq> (x ; 1) || (y ; z) "
-    by (metis alternative_exchange)
+    using alternative_exchange by blast
   then show " (x || y) ; z \<sqsubseteq> x || (y ; z) "
-    by (simp)
+    by simp
 qed
 
 lemma par_is_associative [simp] :
   "(x || y) || z = x || (y || z)"
-  by (metis local.parallel_quantale.mult_assoc)
+  using parallel_quantale.mult_assoc by auto
 
 end
 
@@ -531,8 +773,7 @@ interpretation union_concatenation_quantale :
   quantale "{\<epsilon>}" "(\<union>)" "(;)" "{}" "(\<subseteq>)" "\<Union>"
 proof
   show " \<And> a A. a ; \<Union> A = \<Union> {a ; x |x. x \<in> A} "
-    unfolding conc_def
-    by auto
+    unfolding conc_def by auto
   show  " \<And> x A. (\<And>y. y \<in> A \<Longrightarrow> y \<subseteq> x) \<Longrightarrow> \<Union> A \<subseteq> x"
     by auto
 qed
@@ -540,12 +781,10 @@ qed
 interpretation union_shuffle_quantale :
   quantale "{\<epsilon>}" "(\<union>)" "(\<parallel>)" "{}" "(\<subseteq>)" "\<Union>"
 proof
-  show  " \<And> \<alpha> A. \<alpha> \<parallel> \<Union> A =  \<Union> {\<alpha> \<parallel> \<beta> |\<beta>. \<beta> \<in> A} "
-    unfolding Shuffle_def
-    by auto
+  show  " \<And> \<alpha> A. \<alpha> \<parallel> \<Union> A =  \<Union> {\<alpha> \<parallel> \<beta> | \<beta>. \<beta> \<in> A} "
+    unfolding Shuffle_def by auto
   show  "  \<And> x A. (\<And>y. y \<in> A \<Longrightarrow> y \<subseteq> x) \<Longrightarrow> \<Union> A \<subseteq> x "
-    unfolding Shuffle_def
-    by auto
+    unfolding Shuffle_def by auto
 qed
 
 interpretation shuffle_languages_cka :
